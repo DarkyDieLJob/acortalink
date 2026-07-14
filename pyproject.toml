@@ -1,0 +1,20 @@
+[project]
+name = "acortador"
+version = "0.1.0"
+description = "Acortador de links — standalone Django project"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=5.0,<6",
+    "django-bootstrap5",
+    "whitenoise",
+    "openpyxl",
+    "stripe>=8.0,<10",
+    "django-cryptography>=1.0,<2",
+    "mercadopago>=2.0",
+    "redis>=4.0",
+    "gunicorn>=21.0",
+    "psycopg[binary]>=3.1,<4",
+]
+
+[dependency-groups]
+dev = []

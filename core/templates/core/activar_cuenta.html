@@ -1,0 +1,35 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Activación de cuenta — Acortador | DieL{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block acortador_content %}
+
+<div style="max-width:520px; margin:0 auto;">
+    <h2 class="console-heading text-center mb-4">Activación de cuenta</h2>
+
+    {% if error %}
+    <div class="acortador-form text-center">
+        <div style="font-size:2rem; margin-bottom:1rem;">❌</div>
+        <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+            <strong style="color:#dc3545;">{{ error }}</strong>
+        </div>
+        <p style="color:#888; font-size:0.85rem;">
+            Si el problema persiste, registrate nuevamente.
+        </p>
+        <a href="{% url 'core:registro' %}" class="btn btn-acortar w-100 mt-2">Registrarse de nuevo</a>
+    </div>
+    {% else %}
+    <div class="acortador-form text-center">
+        <div style="font-size:2rem; margin-bottom:1rem;">✓</div>
+        <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+            <strong style="color:#00ff41;">¡Cuenta activada!</strong><br>
+            Tu cuenta <strong>{{ user.username }}</strong> ya está activa.<br>
+            Ya podés ingresar y empezar a acortar links.
+        </div>
+        <a href="{% url 'core:login' %}" class="btn btn-acortar w-100">Ingresar ahora</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

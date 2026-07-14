@@ -1,0 +1,143 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Mis links — Acortador | DieL{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block acortador_content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="console-heading">Mis links</h2>
+    <a href="{% url 'core:index' %}" class="btn btn-acortar btn-sm">+ Acortar nuevo</a>
+</div>
+
+{% if not is_premium %}
+<div class="alert alert-info small mb-3" style="background:#0a0a0a;border:1px solid #222;color:#888;">
+    Sos usuario <strong style="color:#fff;">free</strong>. Tus links redirigen instantáneamente (302) sin página intermedia.
+    <a href="{% url 'core:subscribir' %}" class="alert-link" style="color:#00ff41;">Subscribite premium</a> para activar SEO indexable, filtros avanzados y bulk CSV.
+</div>
+{% endif %}
+
+<!-- Filtros -->
+<div class="acortador-form mb-4">
+    <form method="get" id="filter-form">
+        <div class="row g-2 align-items-end">
+            <div class="col">
+                <label class="form-label text-muted" style="font-size:0.75rem;">Buscar</label>
+                <input type="text" name="q" value="{{ q|default:'' }}" class="form-control"
+                       placeholder="Código..."
+                       style="background:#0a0a0a;border:1px solid #333;color:#fff;font-size:0.85rem;">
+            </div>
+            <div class="col-auto">
+                <label class="form-label text-muted" style="font-size:0.75rem;">SEO</label>
+                <select name="seo" class="form-select" style="background:#0a0a0a;border:1px solid #333;color:#fff;font-size:0.85rem;">
+                    <option value="">Todos</option>
+                    <option value="yes" {% if request.GET.seo == 'yes' %}selected{% endif %}>Con SEO</option>
+                    <option value="no" {% if request.GET.seo == 'no' %}selected{% endif %}>Sin SEO</option>
+                </select>
+            </div>
+            {% if is_premium %}
+            <div class="col-auto">
+                <label class="form-label text-muted" style="font-size:0.75rem;">Tipo</label>
+                <select name="type" class="form-select" style="background:#0a0a0a;border:1px solid #333;color:#fff;font-size:0.85rem;">
+                    <option value="">Todos</option>
+                    <option value="free" {% if request.GET.type == 'free' %}selected{% endif %}>Free</option>
+                    <option value="premium" {% if request.GET.type == 'premium' %}selected{% endif %}>Premium</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label text-muted" style="font-size:0.75rem;">Ordenar</label>
+                <select name="sort" class="form-select" style="background:#0a0a0a;border:1px solid #333;color:#fff;font-size:0.85rem;">
+                    <option value="-creado" {% if request.GET.sort == '-creado' or not request.GET.sort %}selected{% endif %}>Más recientes</option>
+                    <option value="creado" {% if request.GET.sort == 'creado' %}selected{% endif %}>Más antiguos</option>
+                    <option value="-clicks" {% if request.GET.sort == '-clicks' %}selected{% endif %}>Más clicks</option>
+                    <option value="clicks" {% if request.GET.sort == 'clicks' %}selected{% endif %}>Menos clicks</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="form-label text-muted" style="font-size:0.75rem;">Desde</label>
+                <input type="date" name="from" value="{{ request.GET.from|default:'' }}" class="form-control"
+                       style="background:#0a0a0a;border:1px solid #333;color:#fff;font-size:0.85rem;width:140px;">
+            </div>
+            <div class="col-auto">
+                <label class="form-label text-muted" style="font-size:0.75rem;">Hasta</label>
+                <input type="date" name="to" value="{{ request.GET.to|default:'' }}" class="form-control"
+                       style="background:#0a0a0a;border:1px solid #333;color:#fff;font-size:0.85rem;width:140px;">
+            </div>
+            {% endif %}
+            <div class="col-auto">
+                <button type="submit" class="btn btn-sm btn-acortar">Filtrar</button>
+                <a href="{% url 'core:mis_links' %}" class="btn btn-sm btn-outline-light" style="border-color:#333;color:#666;">Limpiar</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+{% if links %}
+<div class="links-table table-responsive">
+    <table class="table table-hover mb-0">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>URL original</th>
+                <th class="text-center">Tipo</th>
+                <th class="text-center">SEO</th>
+                <th class="text-center">Clicks</th>
+                <th class="text-center">Creado</th>
+                <th class="text-center">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for link in links %}
+            <tr>
+                <td><span class="short-code">{{ link.short_code }}</span></td>
+                <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    <a href="{{ link.original_url }}" target="_blank" style="color:#666;">{{ link.original_url }}</a>
+                </td>
+                <td class="text-center">
+                    {% if link.is_premium %}
+                    <span class="badge badge-premium">Premium</span>
+                    {% else %}
+                    <span class="badge badge-free">Free</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">
+                    {% if link.seo_title or link.seo_description %}
+                    <span style="color:#00ff41;" title="Título: {{ link.seo_title|default:'sin título' }}">✓</span>
+                    {% else %}
+                    <span style="color:#444;">—</span>
+                    {% endif %}
+                </td>
+                <td class="text-center">{{ link.clicks }}</td>
+                <td class="text-center" style="font-size:0.75rem;color:#666;">{{ link.creado|date:"d/m/Y" }}</td>
+                <td class="text-center">
+                    <div class="d-flex gap-1 justify-content-center">
+                        <button class="btn btn-sm btn-outline-light" style="font-size:0.7rem;padding:0.15rem 0.4rem;"
+                                data-short-url="{{ request.scheme }}://{{ request.get_host|escapejs }}/s/{{ link.short_code }}/"
+                                onclick="navigator.clipboard.writeText(this.dataset.shortUrl); showToast('Copiado');">
+                            Copiar
+                        </button>
+                        <a href="{% url 'core:editar_link' link.pk %}" class="btn btn-sm btn-outline-info" style="font-size:0.7rem;padding:0.15rem 0.4rem;">
+                            {% if is_premium %}Editar{% else %}Editar URL{% endif %}
+                        </a>
+                        <a href="{% url 'core:eliminar' link.pk %}" class="btn btn-sm btn-outline-danger" style="font-size:0.7rem;padding:0.15rem 0.4rem;"
+                           onclick="return confirm('¿Eliminar este link?')">✕</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<div class="text-center py-5">
+    {% if q or request.GET.type or request.GET.from or request.GET.to or request.GET.seo %}
+    <p class="text-muted mb-3">No se encontraron links con esos filtros.</p>
+    <a href="{% url 'core:mis_links' %}" class="btn btn-outline-light" style="border-color:#333;color:#666;">Limpiar filtros</a>
+    {% else %}
+    <p class="text-muted mb-3">Todavía no tenés links acortados.</p>
+    <a href="{% url 'core:index' %}" class="btn btn-acortar">Acortar mi primer link</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

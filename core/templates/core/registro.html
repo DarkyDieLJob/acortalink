@@ -1,0 +1,61 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Registrarse — Acortador de Links | DieL{% endblock %}
+{% block meta_description %}Creá tu cuenta gratuita en el acortador de links de DieL. Sin anuncios en tus links, redirect instantáneo.{% endblock %}
+
+{% block acortador_content %}
+
+<div style="max-width:520px; margin:0 auto;">
+        <h2 class="console-heading text-center mb-4">Crear cuenta</h2>
+
+        {% if form.errors or email_error %}
+        <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+            {% if email_error %}{{ email_error }}{% else %}Revisá los campos del formulario.{% endif %}
+        </div>
+        {% endif %}
+
+        <div class="acortador-form">
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label text-muted">Usuario</label>
+                    <input type="text" name="username" class="form-control" required autofocus
+                           value="{{ form.username.value|default:'' }}" minlength="3">
+                    {% if form.username.errors %}
+                    <small class="text-danger">{{ form.username.errors|join:", " }}</small>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Email</label>
+                    <input type="email" name="email" class="form-control" required
+                           value="{{ email|default:'' }}" placeholder="tu@email.com">
+                    <small class="text-muted">Te enviaremos un enlace de activación.</small>
+                    {% if email_error %}
+                    <small class="text-danger d-block">{{ email_error }}</small>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Contraseña</label>
+                    <input type="password" name="password1" class="form-control" required>
+                    <small class="text-muted">Mínimo 8 caracteres. No puede ser solo numérica.</small>
+                    {% if form.password1.errors %}
+                    <small class="text-danger d-block">{{ form.password1.errors|join:", " }}</small>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Confirmar contraseña</label>
+                    <input type="password" name="password2" class="form-control" required>
+                    {% if form.password2.errors %}
+                    <small class="text-danger d-block">{{ form.password2.errors|join:", " }}</small>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-acortar w-100">Registrarse</button>
+            </form>
+        </div>
+
+        <p class="text-center mt-3 text-muted">
+            ¿Ya tenés cuenta? <a href="{% url 'core:login' %}">Ingresar</a>
+        </p>
+</div>
+
+{% endblock %}

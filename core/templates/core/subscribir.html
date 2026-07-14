@@ -1,0 +1,118 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Subscripción — Acortador | DieL{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block acortador_content %}
+
+<h2 class="console-heading text-center mb-4">Planes</h2>
+
+{% if checkout_status == 'success' %}
+<div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; color:#fff; font-size:0.85rem;">
+    <strong style="color:#00ff41;">✓ Pago procesado.</strong>
+    Tu subscripción premium se está activando.
+</div>
+{% elif checkout_status == 'cancelled' %}
+<div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; color:#fff; font-size:0.85rem;">
+    <strong style="color:#dc3545;">Pago cancelado.</strong>
+    Podés intentar nuevamente cuando quieras.
+</div>
+{% elif checkout_status == 'error' %}
+<div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; color:#fff; font-size:0.85rem;">
+    <strong style="color:#dc3545;">Error.</strong>
+    No se pudo iniciar el pago. Intentá nuevamente.
+</div>
+{% endif %}
+
+<div class="row g-4 mb-4" style="max-width:900px; margin:0 auto;">
+
+    <!-- Plan Free -->
+    <div class="col-md-6">
+        <div class="acortador-form h-100" style="border-color:#222;">
+            <div class="text-center mb-3">
+                <span class="badge badge-free" style="font-size:0.75rem; padding:0.4rem 0.8rem;">FREE</span>
+                <h3 class="mt-2 mb-1" style="color:#fff;">$0</h3>
+                <p style="color:#555; font-size:0.8rem;">gratis para siempre</p>
+            </div>
+            <ul class="list-unstyled" style="color:#666; font-size:0.85rem;">
+                <li class="mb-2">✓ Links acortados ilimitados</li>
+                <li class="mb-2">✓ Redirect instantáneo (302)</li>
+                <li class="mb-2">✓ Búsqueda simple de links</li>
+                <li class="mb-2">✓ Edición de URL</li>
+                <li class="mb-2">✓ Eliminar links</li>
+                <li class="mb-2">✓ Verificación 2FA por email</li>
+                <li class="mb-2" style="color:#444;">✗ Sin SEO indexable</li>
+                <li class="mb-2" style="color:#444;">✗ Sin página de redirección</li>
+                <li class="mb-2" style="color:#444;">✗ Sin bulk CSV</li>
+                <li class="mb-2" style="color:#444;">✗ Con publicidad</li>
+            </ul>
+            {% if not is_premium %}
+            <div class="text-center mt-3">
+                <span class="badge badge-free" style="font-size:0.7rem;">Plan actual</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Plan Premium -->
+    <div class="col-md-6">
+        <div class="acortador-form h-100" style="border-color:#00ff41; box-shadow:0 0 20px rgba(0,255,65,0.08);">
+            <div class="text-center mb-3">
+                <span class="badge badge-premium" style="font-size:0.75rem; padding:0.4rem 0.8rem;">PREMIUM</span>
+                <h3 class="mt-2 mb-1" style="color:#00ff41;">${{ mp_price }} ARS<small style="color:#555; font-size:0.7rem;"> / mes</small></h3>
+                <p style="color:#555; font-size:0.8rem;">cancelá cuando quieras</p>
+            </div>
+            <ul class="list-unstyled" style="color:#aaa; font-size:0.85rem;">
+                <li class="mb-2">✓ Todo lo del plan <strong style="color:#888;">Free</strong></li>
+                <li class="mb-2">✓ <strong>SEO indexable</strong> en Google y Bing</li>
+                <li class="mb-2">✓ <strong>Página de redirección</strong> con metadatos</li>
+                <li class="mb-2">✓ <strong>OpenGraph + Twitter Cards</strong> para redes</li>
+                <li class="mb-2">✓ <strong>Countdown configurable</strong> (0-30s)</li>
+                <li class="mb-2">✓ <strong>Bulk CSV/XLSX</strong> con columnas SEO</li>
+                <li class="mb-2">✓ <strong>Filtros avanzados</strong> (tipo, fecha, clicks)</li>
+                <li class="mb-2">✓ <strong>Edición completa</strong> URL + SEO</li>
+                <li class="mb-2">✓ <strong>Ping automático</strong> a buscadores cada 30 min</li>
+                <li class="mb-2">✓ <strong>Sin publicidad</strong></li>
+            </ul>
+            {% if has_sub and sub_status == 'active' %}
+            <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:0.75rem 1rem; margin-top:1rem; color:#fff; font-size:0.85rem;">
+                <strong style="color:#00ff41;">✓ Subscripción activa</strong>
+            </div>
+            <form method="post" action="{% url 'core:cancelar_sub' %}" onsubmit="return confirm('¿Seguro que querés cancelar tu subscripción premium? Perderás acceso a todas las funciones premium.');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger w-100 mt-2" style="border-color:#dc3545;color:#dc3545;font-size:0.8rem;">Cancelar subscripción</button>
+            </form>
+            {% elif has_sub and sub_status == 'pending' %}
+            <div style="background:#0d0d0d; border:1px solid #ffc107; border-radius:8px; padding:0.75rem 1rem; margin-top:1rem; color:#fff; font-size:0.85rem;">
+                Subscripción pendiente de pago.
+            </div>
+            <form method="post" action="{% url 'core:checkout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-acortar w-100 mt-2">Pagar con Mercado Pago</button>
+            </form>
+            {% elif has_sub and sub_status == 'cancelled' %}
+            <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-top:1rem; color:#fff; font-size:0.85rem;">
+                <strong style="color:#dc3545;">Subscripción cancelada.</strong>
+            </div>
+            <form method="post" action="{% url 'core:checkout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-acortar w-100 mt-2">Reactivar con Mercado Pago</button>
+            </form>
+            {% else %}
+            <form method="post" action="{% url 'core:checkout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-acortar w-100 mt-3">Subscribirse con Mercado Pago</button>
+            </form>
+            <p class="text-muted mt-2 text-center" style="font-size:0.75rem;">
+                Pago seguro · Tarjetas, transferencia, efectivo
+            </p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="text-center">
+    <a href="{% url 'core:index' %}" class="console-link">Volver al acortador</a>
+</div>
+
+{% endblock %}

@@ -1,0 +1,466 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block meta_title %}Acortador de Links — Sin anuncios ni contadores molestos{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Acortá tus links sin anuncios ni contadores molestos. Redirect instantáneo y gratuito. Versión premium con SEO indexable y bulk CSV.{% endblock %}">
+    <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="{% block og_title %}Acortador de Links — DieL{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Acortá tus links sin anuncios ni contadores molestos.{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+
+    <link rel="canonical" href="{{ request.build_absolute_uri }}">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&display=swap" rel="stylesheet">
+
+    {% load django_bootstrap5 %}
+    {% bootstrap_css %}
+    {% bootstrap_javascript %}
+
+    <style>
+        html, body { height: 100%; }
+        body {
+            background: #090909;
+            font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        h1, h2, h3, h4, h5, h6,
+        p, li, a, span, code {
+            font-family: 'JetBrains Mono', 'Courier New', Courier, monospace !important;
+        }
+        a { color: #00ff41; }
+        a:hover { color: #00cc33; text-decoration: underline; }
+        .console-heading::before { content: '> '; color: #00ff41; }
+        .console-link { color: #00ff41; text-decoration: none; }
+        .console-link:hover { color: #00cc33; text-decoration: underline; }
+
+    /* Layout con sidebars publicitarias */
+    .acortador-layout {
+        display: flex;
+        gap: 1rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    .ad-sidebar {
+        width: 200px;
+        flex-shrink: 0;
+        min-height: 600px;
+    }
+    .ad-sidebar-left { order: 0; }
+    .ad-sidebar-right { order: 2; }
+    .acortador-main {
+        flex: 1;
+        min-width: 0;
+        order: 1;
+    }
+    .ad-placeholder {
+        background: #111;
+        border: 1px dashed #333;
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+        color: #444;
+        font-size: 0.75rem;
+        position: sticky;
+        top: 1rem;
+    }
+    .ad-placeholder p { margin: 0; }
+
+    @media (max-width: 991px) {
+        .ad-sidebar { display: none; }
+    }
+
+    /* Navbar del acortador */
+    .acortador-nav {
+        background: #000;
+        border-bottom: 1px solid #1a1a1a;
+        padding: 0.5rem 0;
+    }
+    .acortador-nav .nav-link {
+        color: #888;
+        font-size: 0.85rem;
+    }
+    .acortador-nav .nav-link:hover { color: #00ff41; }
+    .acortador-nav .brand {
+        color: #00ff41;
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 1rem;
+    }
+
+    /* Form de acortar */
+    .acortador-form {
+        background: #111;
+        border: 1px solid #222;
+        border-radius: 12px;
+        padding: 2rem;
+    }
+    .acortador-form input[type="text"] {
+        background: #0a0a0a;
+        border: 1px solid #333;
+        color: #fff;
+        font-size: 1.1rem;
+    }
+    .acortador-form input[type="text"]:focus {
+        border-color: #00ff41;
+        box-shadow: 0 0 0 0.2rem rgba(0,255,65,0.15);
+    }
+    .btn-acortar {
+        background: #00ff41;
+        color: #000;
+        font-weight: 700;
+        border: none;
+    }
+    .btn-acortar:hover {
+        background: #00cc33;
+        color: #000;
+    }
+
+    /* Resultado */
+    .acortador-result {
+        background: #0d1a0d;
+        border: 1px solid #00ff41;
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+    .short-url-display {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #00ff41;
+        word-break: break-all;
+    }
+
+    /* Tabla de links */
+    .links-table {
+        background: #111;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .links-table th {
+        background: #1a1a1a;
+        color: #888;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .links-table td { color: #ccc; }
+    .links-table .short-code { color: #00ff41; font-weight: 700; }
+
+    /* Badges */
+    .badge-free { background: #333; color: #aaa; }
+    .badge-premium { background: #0dcaf0; color: #000; }
+
+    /* Navbar dropdown */
+    .acortador-nav .dropdown-toggle {
+        color: #888;
+        font-size: 0.85rem;
+        background: transparent;
+        border: 1px solid #333;
+        border-radius: 6px;
+        padding: 0.35rem 0.75rem;
+        cursor: pointer;
+    }
+    .acortador-nav .dropdown-toggle:hover,
+    .acortador-nav .dropdown-toggle.show {
+        color: #00ff41;
+        border-color: #00ff41;
+    }
+    .acortador-nav .dropdown-toggle::after {
+        margin-left: 0.5rem;
+        font-size: 0.7rem;
+    }
+    .acortador-nav .dropdown-menu {
+        background: #0d0d0d;
+        border: 1px solid #222;
+        border-radius: 8px;
+        min-width: 200px;
+        padding: 0.5rem 0;
+    }
+    .acortador-nav .dropdown-item {
+        color: #aaa;
+        font-size: 0.85rem;
+        padding: 0.5rem 1rem;
+    }
+    .acortador-nav .dropdown-item:hover {
+        background: #1a1a1a;
+        color: #00ff41;
+    }
+    .acortador-nav .dropdown-divider {
+        border-color: #222;
+    }
+    .acortador-nav .dropdown-header {
+        color: #555;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .acortador-nav .user-badge {
+        display: inline-block;
+        width: 20px; height: 20px;
+        background: #00ff41;
+        color: #000;
+        border-radius: 50%;
+        text-align: center;
+        line-height: 20px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        margin-right: 0.4rem;
+    }
+    .acortador-nav .premium-tag {
+        background: #0dcaf0;
+        color: #000;
+        font-size: 0.65rem;
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+        font-weight: 700;
+        margin-left: 0.4rem;
+    }
+
+    /* Footer del acortador */
+    .acortador-footer {
+        background: #000;
+        border-top: 1px solid #1a1a1a;
+        padding: 1rem 0;
+        text-align: center;
+        font-size: 0.75rem;
+        color: #444;
+    }
+    .acortador-footer a { color: #555; text-decoration: none; }
+    .acortador-footer a:hover { color: #00ff41; }
+
+    /* Toast container */
+    #toast-container {
+        position: fixed; top: 1rem; right: 1rem; z-index: 9999;
+        display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none;
+    }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav class="acortador-nav">
+    <div class="container d-flex justify-content-between align-items-center">
+        <a href="{% url 'core:index' %}" class="brand">⚡ Acortador</a>
+        <div class="d-flex gap-3 align-items-center">
+            {% if user.is_authenticated %}
+                <a href="{% url 'core:mis_links' %}" class="nav-link">Mis links</a>
+                {% if is_premium %}
+                    <a href="{% url 'core:bulk' %}" class="nav-link">Bulk CSV</a>
+                {% endif %}
+                <div class="dropdown">
+                    <button class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="user-badge">{{ user.username|first|upper }}</span>{{ user.username }}
+                        {% if is_premium %}<span class="premium-tag">PRO</span>{% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-header">Cuenta</span></li>
+                        <li><a class="dropdown-item" href="{% url 'core:perfil' %}">⚙ Configuración</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><span class="dropdown-header">Subscripción</span></li>
+                        {% if is_premium %}
+                        <li><a class="dropdown-item" href="{% url 'core:subscribir' %}">★ Premium activo</a></li>
+                        <li>
+                            <form method="post" action="{% url 'core:cancelar_sub' %}" onsubmit="return confirm('¿Seguro que querés cancelar tu subscripción?');">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item" style="color:#dc3545;border:none;background:none;width:100%;text-align:left;">✕ Cancelar subscripción</button>
+                            </form>
+                        </li>
+                        {% else %}
+                        <li><a class="dropdown-item" href="{% url 'core:subscribir' %}">★ Subscribirse ($2/mes)</a></li>
+                        {% endif %}
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'core:contacto' %}">✉ Contacto</a></li>
+                        <li><a class="dropdown-item" href="{% url 'logout' %}?next={% url 'core:index' %}">⏏ Salir</a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="{% url 'core:login' %}" class="nav-link">Ingresar</a>
+                <a href="{% url 'core:registro' %}" class="nav-link">Registrarse</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<div class="acortador-layout mt-4 px-3" style="flex:1;">
+    <!-- Sidebar publicitario izquierdo (solo free) -->
+    <div class="ad-sidebar ad-sidebar-left" id="ad-left">
+        <div class="ad-placeholder">
+            <p>📢</p>
+            <p>Espacio publicitario</p>
+            <p style="margin-top:0.5rem;font-size:0.65rem;">AdSense slot<br>(200×600)</p>
+        </div>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="acortador-main">
+        {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% block acortador_content %}{% endblock %}
+    </div>
+
+    <!-- Sidebar publicitario derecho (solo free) -->
+    <div class="ad-sidebar ad-sidebar-right" id="ad-right">
+        <div class="ad-placeholder">
+            <p>📢</p>
+            <p>Espacio publicitario</p>
+            <p style="margin-top:0.5rem;font-size:0.65rem;">AdSense slot<br>(200×600)</p>
+        </div>
+    </div>
+</div>
+
+<footer class="acortador-footer">
+    <div class="container">
+        <a href="{% url 'core:index' %}">⚡ Acortador</a> ·
+        <a href="{% url 'core:privacidad' %}">Privacidad</a> ·
+        <a href="/">Portfolio</a>
+        <br>
+        &copy; {% now "Y" %} DieL — Sin anuncios en tus links.
+    </div>
+</footer>
+
+<!-- Banner de consentimiento de cookies -->
+<div id="cookie-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#1a1a2e;border-top:2px solid #00ff41;padding:1rem 1.5rem;box-shadow:0 -4px 20px rgba(0,0,0,0.5);">
+    <div class="container">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div style="color:#ccc;font-size:0.85rem;max-width:600px;">
+                Usamos cookies para mostrar publicidad y mejorar el servicio.
+                Las cookies necesarias funcionan siempre. Elegí tu preferencia:
+                <a href="{% url 'core:privacidad' %}" style="color:#00ff41;text-decoration:underline;">Más info</a>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <button id="btn-cookies-all" class="btn btn-sm btn-acortar">Aceptar todo</button>
+                <button id="btn-cookies-necessary" class="btn btn-sm btn-outline-light">Solo necesarias</button>
+                <button id="btn-cookies-reject" class="btn btn-sm btn-outline-secondary">Rechazar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="toast-container"></div>
+<script>
+function showToast(msg, type) {
+    type = type || 'success';
+    var colors = {
+        success: { bg: '#d4edda', border: '#28a745', text: '#155724', icon: '\u2713' },
+        error:   { bg: '#f8d7da', border: '#dc3545', text: '#721c24', icon: '\u2717' },
+        info:    { bg: '#d1ecf1', border: '#17a2b8', text: '#0c5460', icon: 'i' },
+    };
+    var c = colors[type] || colors.success;
+    var el = document.createElement('div');
+    el.style.cssText = 'background:' + c.bg + ';border-left:4px solid ' + c.border + ';color:' + c.text +
+        ';padding:0.75rem 1.1rem;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.15);' +
+        'font-size:0.9rem;font-family:inherit;max-width:360px;pointer-events:auto;' +
+        'opacity:0;transform:translateX(100%);transition:all 0.3s ease;display:flex;align-items:center;gap:0.5rem;';
+    el.innerHTML = '<span style="font-weight:700;font-size:1rem;">' + c.icon + '</span><span>' + msg + '</span>';
+    var container = document.getElementById('toast-container');
+    container.appendChild(el);
+    requestAnimationFrame(function() { el.style.opacity = '1'; el.style.transform = 'translateX(0)'; });
+    setTimeout(function() {
+        el.style.opacity = '0'; el.style.transform = 'translateX(100%)';
+        setTimeout(function() { el.remove(); }, 300);
+    }, 3500);
+}
+</script>
+{% block extra_js %}{% endblock %}
+
+<script>
+// --- Estado global ---
+window.adblockDetected = false;
+window.cookieConsent = localStorage.getItem('cookieConsent') || null;
+
+// --- Ocultar ads si es premium ---
+{% if is_premium %}
+document.querySelectorAll('.ad-sidebar').forEach(function(el) { el.style.display = 'none'; });
+{% endif %}
+
+// --- Banner de cookies ---
+(function() {
+    var banner = document.getElementById('cookie-banner');
+    {% if is_premium %}
+    // Premium no ve banner ni ads
+    banner.style.display = 'none';
+    {% else %}
+    if (!window.cookieConsent) {
+        banner.style.display = 'block';
+    }
+    {% endif %}
+
+    function setConsent(value) {
+        window.cookieConsent = value;
+        localStorage.setItem('cookieConsent', value);
+        banner.style.display = 'none';
+        if (value === 'all') {
+            showToast('Cookies aceptadas. Ads personalizados activados.', 'success');
+        } else if (value === 'necessary') {
+            showToast('Solo cookies necesarias. Ads genéricos activados.', 'info');
+        } else {
+            showToast('Cookies rechazadas. Sin publicidad.', 'info');
+        }
+        // Recargar para aplicar configuracion de ads
+        setTimeout(function() { location.reload(); }, 800);
+    }
+
+    document.getElementById('btn-cookies-all').addEventListener('click', function() { setConsent('all'); });
+    document.getElementById('btn-cookies-necessary').addEventListener('click', function() { setConsent('necessary'); });
+    document.getElementById('btn-cookies-reject').addEventListener('click', function() { setConsent('rejected'); });
+})();
+
+// --- Deteccion de AdBlock ---
+(function() {
+    var bait = document.createElement('div');
+    bait.className = 'ad-banner ads ad-placement google-ad';
+    bait.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;';
+    bait.innerHTML = '&nbsp;';
+    document.body.appendChild(bait);
+    setTimeout(function() {
+        var blocked = bait.offsetParent === null ||
+                      bait.offsetHeight === 0 ||
+                      bait.offsetWidth === 0 ||
+                      window.getComputedStyle(bait).display === 'none' ||
+                      window.getComputedStyle(bait).visibility === 'hidden';
+        window.adblockDetected = blocked;
+        bait.remove();
+        if (blocked) {
+            console.log('AdBlock detectado');
+        }
+    }, 100);
+})();
+
+// --- Cargar AdSense segun consentimiento ---
+(function() {
+    {% if is_premium %}
+    return; // premium no ve ads
+    {% endif %}
+    if (window.cookieConsent === 'rejected' || !window.cookieConsent) {
+        return; // no cargar si rechazo o no contesto
+    }
+    // TODO: Reemplazar por tu publisher ID de AdSense
+    // var s = document.createElement('script');
+    // s.async = true;
+    // s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX';
+    // s.crossOrigin = 'anonymous';
+    // document.head.appendChild(s);
+    // if (window.cookieConsent === 'necessary') {
+    //     (adsbygoogle = window.adsbygoogle || []).requestNonPersonalizedAds = 1;
+    // }
+})();
+</script>
+</body>
+</html>

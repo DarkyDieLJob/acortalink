@@ -1,0 +1,136 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Bulk CSV — Acortador | DieL{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block acortador_content %}
+
+<h2 class="console-heading mb-4">Bulk CSV → Links acortados</h2>
+
+{% if error %}
+<div class="alert alert-danger" role="alert" style="background:#0d0d0d;border:1px solid #dc3545;color:#fff;">{{ error }}</div>
+{% endif %}
+
+<div class="acortador-form" style="max-width:none;">
+    <!-- Descargar plantilla -->
+    <div class="mb-4">
+        <label class="form-label text-muted" style="font-size:0.85rem;">1. Descargar plantilla</label>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'core:plantilla' %}" class="btn btn-sm btn-outline-light" style="border-color:#333;color:#aaa;">
+                {% if is_premium %}Descargar plantilla premium{% else %}Descargar plantilla free{% endif %}
+            </a>
+            {% if not is_premium %}
+            <span class="align-self-center" style="font-size:0.75rem;color:#555;">
+                <a href="{% url 'core:subscribir' %}" style="color:#00ff41;">Subscribite</a> para acceder a la plantilla con columnas SEO
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Subir CSV -->
+    <div class="mb-3">
+        <label class="form-label text-muted" style="font-size:0.85rem;">2. Subir CSV completado</label>
+        <form method="post" enctype="multipart/form-data" id="bulk-form">
+            {% csrf_token %}
+            <div class="upload-zone" onclick="document.getElementById('csv-file').click()"
+                 style="border:2px dashed #333;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;">
+                <div class="text-muted">
+                    <strong>+ Seleccionar CSV</strong>
+                    <br><small>o arrastrá el archivo acá · máx 2 MB · UTF-8</small>
+                </div>
+                <input type="file" name="csv_file" id="csv-file" accept=".csv" style="display:none;"
+                       onchange="document.getElementById('bulk-form').submit()">
+            </div>
+        </form>
+    </div>
+
+    <!-- Formato de descarga -->
+    <div class="mb-3">
+        <label class="form-label text-muted" style="font-size:0.85rem;">3. Formato de descarga del resultado</label>
+        <form method="post" enctype="multipart/form-data" id="format-form">
+            {% csrf_token %}
+            <div class="d-flex gap-3">
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="format" value="csv" id="fmt-csv" checked>
+                    <label class="form-check-label text-muted" for="fmt-csv">CSV</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="format" value="xlsx" id="fmt-xlsx">
+                    <label class="form-check-label text-muted" for="fmt-xlsx">XLSX (Excel)</label>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Formato según tier -->
+    <div class="mt-3">
+        {% if is_premium %}
+        <div style="background:#0a0a0a; border:1px solid #00ff41; border-radius:8px; padding:1rem; color:#aaa; font-size:0.8rem;">
+            <strong style="color:#00ff41;">Plantilla premium</strong> — 5 columnas:
+            <table class="table table-sm table-bordered mb-2" style="margin-top:0.75rem;font-size:0.75rem;border-color:#222;">
+                <thead>
+                    <tr style="color:#00ff41;">
+                        <th>url</th>
+                        <th>seo_title</th>
+                        <th>seo_description</th>
+                        <th>seo_image</th>
+                        <th class="text-center">redirect_seconds</th>
+                    </tr>
+                </thead>
+                <tbody style="color:#666;">
+                    <tr>
+                        <td>https://ejemplo.com/pagina1</td>
+                        <td>Título SEO</td>
+                        <td>Descripción SEO</td>
+                        <td>https://ejemplo.com/img.jpg</td>
+                        <td class="text-center">5</td>
+                    </tr>
+                    <tr>
+                        <td>https://ejemplo.com/pagina2</td>
+                        <td>Otro título</td>
+                        <td>Otra descripción</td>
+                        <td style="color:#444;">(vacío)</td>
+                        <td class="text-center">0</td>
+                    </tr>
+                </tbody>
+            </table>
+            <small style="color:#555;">
+                <strong>seo_title</strong>: título para Google y redes (máx 120)<br>
+                <strong>seo_description</strong>: descripción para Google (máx 300)<br>
+                <strong>seo_image</strong>: URL de imagen miniatura para WhatsApp/Facebook (opcional)<br>
+                <strong>redirect_seconds</strong>: segundos antes de redirigir (0-30, default 5)
+            </small>
+        </div>
+        {% else %}
+        <div style="background:#0a0a0a; border:1px solid #222; border-radius:8px; padding:1rem; color:#aaa; font-size:0.8rem;">
+            <strong style="color:#fff;">Plantilla free</strong> — 1 columna:
+            <table class="table table-sm table-bordered mb-0" style="margin-top:0.75rem;font-size:0.75rem;border-color:#222;">
+                <thead>
+                    <tr style="color:#fff;">
+                        <th>url</th>
+                    </tr>
+                </thead>
+                <tbody style="color:#666;">
+                    <tr><td>https://ejemplo.com/pagina1</td></tr>
+                    <tr><td>https://ejemplo.com/pagina2</td></tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+document.getElementById('bulk-form').addEventListener('submit', function(e) {
+    var format = document.querySelector('input[name="format"]:checked');
+    if (format) {
+        var hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'format';
+        hidden.value = format.value;
+        this.appendChild(hidden);
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Mi perfil — Acortador | DieL{% endblock %}
+{% block meta_description %}Configuración de tu cuenta.{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block acortador_content %}
+
+<div style="max-width:560px; margin:0 auto;">
+    <h2 class="console-heading mb-4">Mi perfil</h2>
+
+    <!-- Info de cuenta -->
+    <div class="acortador-form mb-4">
+        <h5 class="mb-3" style="color:#00ff41;">Cuenta</h5>
+        <div class="mb-2" style="font-size:0.85rem; color:#888;">
+            Usuario: <span style="color:#fff;">{{ user.username }}</span>
+        </div>
+
+        <!-- Cambiar email -->
+        {% if email_updated %}
+        <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+            <strong style="color:#00ff41;">✓ Email actualizado.</strong>
+        </div>
+        {% endif %}
+        {% if email_error %}
+        <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+            <strong style="color:#dc3545;">{{ email_error }}</strong>
+        </div>
+        {% endif %}
+        <form method="post" class="mb-3">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_email">
+            <label class="form-label text-muted" style="font-size:0.8rem;">Email</label>
+            <input type="email" name="email" class="form-control mb-2"
+                   value="{{ user.email }}" placeholder="tu@email.com"
+                   style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;">
+            <button type="submit" class="btn btn-sm btn-acortar">Guardar email</button>
+        </form>
+    </div>
+
+    <!-- Cambiar contraseña -->
+    <div class="acortador-form mb-4">
+        <h5 class="mb-3" style="color:#00ff41;">Contraseña</h5>
+        {% if password_changed %}
+        <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+            <strong style="color:#00ff41;">✓ Contraseña actualizada correctamente.</strong>
+        </div>
+        {% endif %}
+        {% if password_error %}
+        <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+            <strong style="color:#dc3545;">{{ password_error }}</strong>
+        </div>
+        {% endif %}
+        {% if not user.email %}
+        <p style="color:#888; font-size:0.85rem;">
+            Necesitás configurar un email antes de cambiar tu contraseña.
+        </p>
+        {% else %}
+        <p style="color:#666; font-size:0.75rem; margin-bottom:1rem;">
+            Al enviar el formulario te enviaremos un código de verificación a tu email para confirmar el cambio.
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="request_password_change">
+            <div class="mb-2">
+                <label class="form-label text-muted" style="font-size:0.8rem;">Contraseña actual</label>
+                <input type="password" name="current_password" class="form-control"
+                       style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;" required>
+            </div>
+            <div class="mb-2">
+                <label class="form-label text-muted" style="font-size:0.8rem;">Nueva contraseña</label>
+                <input type="password" name="new_password1" class="form-control"
+                       style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted" style="font-size:0.8rem;">Repetir nueva contraseña</label>
+                <input type="password" name="new_password2" class="form-control"
+                       style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;" required>
+            </div>
+            <button type="submit" class="btn btn-sm btn-acortar">Cambiar contraseña</button>
+        </form>
+        {% endif %}
+    </div>
+
+    <!-- Subscripción -->
+    <div class="acortador-form mb-4">
+        <h5 class="mb-3" style="color:#00ff41;">Subscripción</h5>
+        {% if has_sub and sub_status == 'active' %}
+        <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+            <strong style="color:#00ff41;">✓ Activa</strong> — Premium
+        </div>
+        <form method="post" action="{% url 'core:cancelar_sub' %}" onsubmit="return confirm('¿Seguro que querés cancelar tu subscripción premium?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="border-color:#dc3545;color:#dc3545;">Cancelar subscripción</button>
+        </form>
+        {% elif has_sub and sub_status == 'cancelled' %}
+        <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+            <strong style="color:#dc3545;">Cancelada</strong>
+        </div>
+        <a href="{% url 'core:subscribir' %}" class="btn btn-sm btn-acortar w-100">Reactivar</a>
+        {% elif has_sub and sub_status == 'pending' %}
+        <div style="background:#0d0d0d; border:1px solid #ffc107; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+            <strong style="color:#ffc107;">Pendiente</strong>
+        </div>
+        <a href="{% url 'core:subscribir' %}" class="btn btn-sm btn-acortar w-100">Completar pago</a>
+        {% else %}
+        <div style="background:#0d0d0d; border:1px solid #333; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#888; font-size:0.85rem;">
+            Sin subscripción
+        </div>
+        <a href="{% url 'core:subscribir' %}" class="btn btn-sm btn-acortar w-100">Subscribirse</a>
+        {% endif %}
+    </div>
+
+    <div class="mt-3 text-center">
+        <a href="{% url 'core:index' %}" class="console-link">← Volver al acortador</a>
+    </div>
+</div>
+
+{% endblock %}

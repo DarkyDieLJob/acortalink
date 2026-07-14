@@ -1,0 +1,55 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Reportar link — Acortador | DieL{% endblock %}
+{% block meta_description %}Reportá un link acortado por phishing, malware, spam o fraude.{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block acortador_content %}
+
+<div style="max-width:520px; margin:0 auto;">
+    <h2 class="console-heading text-center mb-4">Reportar link</h2>
+
+    <div class="alert alert-secondary mb-4">
+        <small class="text-muted">Link reportado:</small><br>
+        <code>{{ link.short_code }}</code> → {{ link.original_url|truncatechars:60 }}
+    </div>
+
+    {% if success %}
+    <div class="alert alert-success">
+        <strong>Reporte enviado.</strong> Gracias por ayudar a mantener la plataforma segura.
+        Vamos a revisar este link a la brevedad.
+    </div>
+    <div class="mt-3 text-center">
+        <a href="{% url 'core:index' %}" class="console-link">Volver al acortador</a>
+    </div>
+    {% else %}
+    {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+    {% endif %}
+
+    <div class="acortador-form">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label text-muted">Motivo del reporte</label>
+                <select name="reason" class="form-select" required>
+                    <option value="">Seleccioná un motivo...</option>
+                    <option value="phishing">Phishing / Suplantación</option>
+                    <option value="malware">Malware / Virus</option>
+                    <option value="spam">Spam</option>
+                    <option value="fraud">Fraude / Estafa</option>
+                    <option value="other">Otro</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">Detalle (opcional)</label>
+                <textarea name="detail" class="form-control" rows="3"
+                          maxlength="500" placeholder="Describí brevemente el problema..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-acortar w-100">Enviar reporte</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

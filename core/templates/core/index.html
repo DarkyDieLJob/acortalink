@@ -1,0 +1,127 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Acortador de Links — Sin anuncios ni contadores molestos | DieL{% endblock %}
+{% block meta_description %}Acortá tus links sin anuncios ni contadores molestos. Redirect instantáneo y gratuito. Versión premium con SEO indexable y bulk CSV.{% endblock %}
+
+{% block acortador_content %}
+
+<div class="text-center mb-4">
+    <h2 class="console-heading">Acortador de Links</h2>
+    <p class="header-sub mt-2">
+        Sin anuncios en tus links. Sin contadores molestos. Redirect instantáneo.
+    </p>
+</div>
+
+<div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; color:#fff; font-size:0.85rem;">
+    <strong style="color:#00ff41;">⚠ Solo HTTPS.</strong>
+    Este acortador no acepta URLs sin certificado SSL
+    (<code style="color:#00ff41;">http://</code>). Si tu sitio no tiene HTTPS, no funcionará.
+    La mayoría de los hosting modernos ofrecen SSL gratis (Let's Encrypt).
+</div>
+
+{% if error %}
+<div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; color:#fff; font-size:0.85rem;">
+    {{ error }}
+</div>
+{% endif %}
+
+{% if created_link %}
+<div class="acortador-result mb-4">
+    <p class="text-muted mb-1">Tu link acortado:</p>
+    <div class="short-url-display">{{ short_url }}</div>
+    <div class="mt-3 d-flex gap-2">
+        <button class="btn btn-sm btn-outline-light" onclick="navigator.clipboard.writeText('{{ short_url }}'); showToast('Copiado al portapapeles');">
+            Copiar
+        </button>
+        <a href="{{ short_url }}" target="_blank" class="btn btn-sm btn-outline-light">Probar</a>
+        <a href="{% url 'core:mis_links' %}" class="btn btn-sm btn-outline-light">Mis links</a>
+        {% if is_premium %}
+        <a href="{% url 'core:editar_link' created_link.pk %}" class="btn btn-sm btn-outline-info">Editar</a>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<div class="acortador-form">
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'core:index' %}" id="shorten-form">
+        {% csrf_token %}
+        <div class="input-group input-group-lg">
+            <input type="text" name="url" class="form-control" placeholder="Pegá tu URL acá..." required autofocus>
+            <button type="submit" class="btn btn-acortar px-4" id="btn-shorten">Acortar</button>
+        </div>
+    </form>
+    <div id="adblock-warning" style="display:none; background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:1rem 1.25rem; margin-top:1rem; margin-bottom:0; color:#fff; font-size:0.85rem;">
+        <strong style="color:#00ff41;">Se detectó un bloqueador de anuncios.</strong>
+        El acortador es gratuito gracias a la publicidad. Para crear links,
+        desactivá tu AdBlock en esta página y recargá.
+    </div>
+    {% else %}
+    <div class="text-center">
+        <p class="mb-3" style="font-size:1.1rem;">Para acortar links necesitás una cuenta.</p>
+        <div class="d-flex gap-2 justify-content-center">
+            <a href="{% url 'core:registro' %}" class="btn btn-acortar px-4">Registrarse gratis</a>
+            <a href="{% url 'core:login' %}" class="btn btn-outline-light px-4">Ingresar</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% if user.is_authenticated %}
+<div class="mt-4 d-flex gap-2 justify-content-center">
+    <a href="{% url 'core:mis_links' %}" class="console-link">→ Mis links</a>
+    {% if is_premium %}
+    <span class="text-muted">·</span>
+    <a href="{% url 'core:bulk' %}" class="console-link">→ Bulk CSV/XLSX</a>
+    {% else %}
+    <span class="text-muted">·</span>
+    <a href="{% url 'core:subscribir' %}" class="console-link">→ Subscribirse premium ($2/mes)</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    {% if is_premium %}
+    // Premium no ve ads, no se le bloquea nada
+    return;
+    {% endif %}
+
+    var form = document.getElementById('shorten-form');
+    if (!form) return;
+
+    form.addEventListener('submit', function(e) {
+        if (window.adblockDetected) {
+            e.preventDefault();
+            var warning = document.getElementById('adblock-warning');
+            if (warning) warning.style.display = 'block';
+            showToast('Desactivá tu AdBlock para crear links.', 'error');
+        }
+    });
+
+    // Doble check: bait div + fetch a archivo falso de ads
+    function deepCheck() {
+        return fetch('/static/portfolio/ads.js?t=' + Date.now(), { method: 'HEAD' })
+            .then(function() { return false; })
+            .catch(function() { return true; });
+    }
+
+    setTimeout(function() {
+        if (window.adblockDetected) {
+            var warning = document.getElementById('adblock-warning');
+            if (warning) warning.style.display = 'block';
+        }
+        deepCheck().then(function(blocked) {
+            if (blocked) {
+                window.adblockDetected = true;
+                var warning = document.getElementById('adblock-warning');
+                if (warning) warning.style.display = 'block';
+            }
+        });
+    }, 300);
+})();
+</script>
+{% endblock %}

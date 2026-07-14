@@ -1,0 +1,38 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Ingresar — Acortador de Links | DieL{% endblock %}
+{% block meta_description %}Ingresá a tu cuenta del acortador de links de DieL.{% endblock %}
+
+{% block acortador_content %}
+
+<div style="max-width:520px; margin:0 auto;">
+    <h2 class="console-heading text-center mb-4">Ingresar</h2>
+
+    {% if error %}
+    <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+        {% if error_msg %}{{ error_msg }}{% else %}Usuario o contraseña incorrectos.{% endif %}
+    </div>
+    {% endif %}
+
+    <div class="acortador-form">
+        <form method="post">
+            {% csrf_token %}
+            {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+            <div class="mb-3">
+                <label class="form-label text-muted">Usuario</label>
+                <input type="text" name="username" class="form-control" required autofocus>
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted">Contraseña</label>
+                <input type="password" name="password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-acortar w-100">Ingresar</button>
+        </form>
+    </div>
+
+    <p class="text-center mt-3 text-muted">
+        ¿No tenés cuenta? <a href="{% url 'core:registro' %}">Registrarse gratis</a>
+    </p>
+</div>
+
+{% endblock %}

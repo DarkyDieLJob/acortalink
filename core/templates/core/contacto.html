@@ -1,0 +1,50 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Contacto — Acortador Premium | DieL{% endblock %}
+{% block meta_description %}Contactate para activar tu subscripción premium del acortador de links.{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block acortador_content %}
+
+<div style="max-width:520px; margin:0 auto;">
+    <h2 class="console-heading text-center mb-4">Contacto Premium</h2>
+
+    {% if enviado %}
+    <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; color:#fff; font-size:0.9rem;">
+        <strong style="color:#00ff41;">✓ Mensaje enviado.</strong>
+        Te responderé a la brevedad para activar tu premium.
+    </div>
+    {% endif %}
+
+    {% if rate_limited %}
+    <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; color:#fff; font-size:0.9rem;">
+        <strong style="color:#dc3545;">Demasiados mensajes.</strong>
+        Esperá una hora antes de enviar otro mensaje.
+    </div>
+    {% endif %}
+
+    <div class="acortador-form">
+        <form method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label text-muted" style="font-size:0.8rem;">Nombre</label>
+                {{ form.nombre }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted" style="font-size:0.8rem;">Email</label>
+                {{ form.email }}
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-muted" style="font-size:0.8rem;">Mensaje</label>
+                {{ form.mensaje }}
+            </div>
+            <button type="submit" class="btn btn-acortar w-100">Enviar</button>
+        </form>
+    </div>
+
+    <div class="mt-3 text-center">
+        <a href="{% url 'core:subscribir' %}" class="console-link">← Volver a subscripciones</a>
+    </div>
+</div>
+
+{% endblock %}

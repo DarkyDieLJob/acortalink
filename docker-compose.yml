@@ -1,0 +1,78 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-acortador}
+      POSTGRES_USER: ${DB_USER:-acortador}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-acortador} -d ${DB_NAME:-acortador}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=acortador_project.settings
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - CACHE_BACKEND=redis
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn -c gunicorn.conf.py acortador_project.wsgi:application"
+
+  cron:
+    build: .
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DJANGO_SETTINGS_MODULE=acortador_project.settings
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_HOST=db
+      - DB_PORT=5432
+      - REDIS_URL=redis://redis:6379/0
+      - CACHE_BACKEND=redis
+    restart: unless-stopped
+    entrypoint: []
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "printf '0 3 * * * cd /app && python manage.py cleanup_expired_links >> /var/log/cron_cleanup.log 2>&1\n*/30 * * * * cd /app && python manage.py ping_seo >> /var/log/cron_ping.log 2>&1\n*/5 * * * * cd /app && python manage.py flush_clicks >> /var/log/cron_flush.log 2>&1\n' | crontab - &&
+             crond -f -l 2"
+
+volumes:
+  pgdata:
