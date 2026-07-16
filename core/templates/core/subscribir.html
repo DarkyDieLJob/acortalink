@@ -1,7 +1,10 @@
 {% extends "core/base.html" %}
 
-{% block meta_title %}Subscripción — Acortador | DieL{% endblock %}
+{% block meta_title %}Planes — Acortalink | DieL{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block ad_sidebar_left %}{% endblock %}
+{% block ad_sidebar_right %}{% endblock %}
 
 {% block acortador_content %}
 
@@ -10,7 +13,7 @@
 {% if checkout_status == 'success' %}
 <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; color:#fff; font-size:0.85rem;">
     <strong style="color:#00ff41;">✓ Pago procesado.</strong>
-    Tu subscripción premium se está activando.
+    Tu subscripción se está activando.
 </div>
 {% elif checkout_status == 'cancelled' %}
 <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:1rem 1.25rem; margin-bottom:1.5rem; color:#fff; font-size:0.85rem;">
@@ -24,92 +27,236 @@
 </div>
 {% endif %}
 
-<div class="row g-4 mb-4" style="max-width:900px; margin:0 auto;">
+<div class="row g-3 mb-4" style="max-width:1100px; margin:0 auto;">
 
     <!-- Plan Free -->
-    <div class="col-md-6">
-        <div class="acortador-form h-100" style="border-color:#222;">
+    <div class="col-lg-3 col-md-6">
+        <div class="acortalink-form h-100" style="border-color:#222;">
             <div class="text-center mb-3">
-                <span class="badge badge-free" style="font-size:0.75rem; padding:0.4rem 0.8rem;">FREE</span>
+                <span class="badge badge-free" style="font-size:0.7rem; padding:0.35rem 0.7rem;">FREE</span>
                 <h3 class="mt-2 mb-1" style="color:#fff;">$0</h3>
-                <p style="color:#555; font-size:0.8rem;">gratis para siempre</p>
+                <p style="color:#ddd; font-size:0.75rem;">gratis para siempre</p>
             </div>
-            <ul class="list-unstyled" style="color:#666; font-size:0.85rem;">
-                <li class="mb-2">✓ Links acortados ilimitados</li>
+            <ul class="list-unstyled" style="color:#ddd; font-size:0.8rem;">
+                <li class="mb-2">✓ 30 links acortados</li>
                 <li class="mb-2">✓ Redirect instantáneo (302)</li>
-                <li class="mb-2">✓ Búsqueda simple de links</li>
+                <li class="mb-2">✓ Búsqueda de links</li>
                 <li class="mb-2">✓ Edición de URL</li>
-                <li class="mb-2">✓ Eliminar links</li>
-                <li class="mb-2">✓ Verificación 2FA por email</li>
-                <li class="mb-2" style="color:#444;">✗ Sin SEO indexable</li>
-                <li class="mb-2" style="color:#444;">✗ Sin página de redirección</li>
-                <li class="mb-2" style="color:#444;">✗ Sin bulk CSV</li>
-                <li class="mb-2" style="color:#444;">✗ Con publicidad</li>
+                <li class="mb-2">✓ 2FA por email</li>
+                <li class="mb-2">✓ Anti-phishing</li>
+                <li class="mb-2">✓ Sin ads</li>
+                <li class="mb-2" style="color:#666;">✗ Sin SEO indexable</li>
+                <li class="mb-2" style="color:#666;">✗ Sin bulk CSV</li>
+                <li class="mb-2" style="color:#666;">✗ Sin QR codes</li>
+                <li class="mb-2" style="color:#666;">✗ Sin API</li>
+                <li class="mb-2" style="color:#666;">✗ Links expiran a 30 días</li>
             </ul>
             {% if not is_premium %}
             <div class="text-center mt-3">
-                <span class="badge badge-free" style="font-size:0.7rem;">Plan actual</span>
+                <span class="badge badge-free" style="font-size:0.65rem;">Plan actual</span>
             </div>
             {% endif %}
         </div>
     </div>
 
-    <!-- Plan Premium -->
-    <div class="col-md-6">
-        <div class="acortador-form h-100" style="border-color:#00ff41; box-shadow:0 0 20px rgba(0,255,65,0.08);">
+    <!-- Plan Starter -->
+    <div class="col-lg-3 col-md-6">
+        <div class="acortalink-form h-100" style="border-color:#00ff41; box-shadow:0 0 15px rgba(0,255,65,0.06);">
             <div class="text-center mb-3">
-                <span class="badge badge-premium" style="font-size:0.75rem; padding:0.4rem 0.8rem;">PREMIUM</span>
-                <h3 class="mt-2 mb-1" style="color:#00ff41;">${{ mp_price }} ARS<small style="color:#555; font-size:0.7rem;"> / mes</small></h3>
-                <p style="color:#555; font-size:0.8rem;">cancelá cuando quieras</p>
+                <span class="badge badge-premium" style="font-size:0.7rem; padding:0.35rem 0.7rem;">STARTER</span>
+                <h3 class="mt-2 mb-1" style="color:#00ff41;">${{ plan_prices.starter }} ARS<small style="color:#ddd; font-size:0.65rem;"> / mes</small></h3>
+                <p style="color:#ddd; font-size:0.75rem;">cancelá cuando quieras</p>
             </div>
-            <ul class="list-unstyled" style="color:#aaa; font-size:0.85rem;">
-                <li class="mb-2">✓ Todo lo del plan <strong style="color:#888;">Free</strong></li>
-                <li class="mb-2">✓ <strong>SEO indexable</strong> en Google y Bing</li>
-                <li class="mb-2">✓ <strong>Página de redirección</strong> con metadatos</li>
-                <li class="mb-2">✓ <strong>OpenGraph + Twitter Cards</strong> para redes</li>
-                <li class="mb-2">✓ <strong>Countdown configurable</strong> (0-30s)</li>
-                <li class="mb-2">✓ <strong>Bulk CSV/XLSX</strong> con columnas SEO</li>
-                <li class="mb-2">✓ <strong>Filtros avanzados</strong> (tipo, fecha, clicks)</li>
-                <li class="mb-2">✓ <strong>Edición completa</strong> URL + SEO</li>
-                <li class="mb-2">✓ <strong>Ping automático</strong> a buscadores cada 30 min</li>
-                <li class="mb-2">✓ <strong>Sin publicidad</strong></li>
+            <ul class="list-unstyled" style="color:#ddd; font-size:0.8rem;">
+                <li class="mb-2">✓ Todo lo del plan <strong style="color:#ddd;">Free</strong></li>
+                <li class="mb-2">✓ <strong>3.000 links</strong></li>
+                <li class="mb-2">✓ <strong>SEO indexable</strong> + OG + Twitter</li>
+                <li class="mb-2">✓ <strong>Página de redirección</strong> con countdown</li>
+                <li class="mb-2">✓ <strong>Bulk CSV</strong> con columnas SEO</li>
+                <li class="mb-2">✓ <strong>QR codes</strong> PNG + SVG</li>
+                <li class="mb-2">✓ <strong>Analytics</strong> geo + device + referrer</li>
+                <li class="mb-2">✓ <strong>Password protection</strong></li>
+                <li class="mb-2">✓ <strong>API</strong> 1.000 req/mes</li>
+                <li class="mb-2">✓ <strong>1 custom domain</strong></li>
+                <li class="mb-2">✓ <strong>Sin ads</strong></li>
+                <li class="mb-2">✓ <strong>Links sin expiración</strong></li>
             </ul>
-            {% if has_sub and sub_status == 'active' %}
-            <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:0.75rem 1rem; margin-top:1rem; color:#fff; font-size:0.85rem;">
-                <strong style="color:#00ff41;">✓ Subscripción activa</strong>
+            {% if has_sub and sub_status == 'active' and sub_plan == 'starter' %}
+            <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:0.6rem 0.8rem; margin-top:0.75rem; color:#fff; font-size:0.8rem;">
+                <strong style="color:#00ff41;">✓ Plan actual</strong>
             </div>
-            <form method="post" action="{% url 'core:cancelar_sub' %}" onsubmit="return confirm('¿Seguro que querés cancelar tu subscripción premium? Perderás acceso a todas las funciones premium.');">
+            <form method="post" action="{% url 'core:cancelar_sub' %}" onsubmit="return confirm('¿Cancelar tu subscripción Starter?');">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-outline-danger w-100 mt-2" style="border-color:#dc3545;color:#dc3545;font-size:0.8rem;">Cancelar subscripción</button>
+                <button type="submit" class="btn btn-outline-danger w-100 mt-2" style="border-color:#dc3545;color:#dc3545;font-size:0.75rem;">Cancelar</button>
             </form>
-            {% elif has_sub and sub_status == 'pending' %}
-            <div style="background:#0d0d0d; border:1px solid #ffc107; border-radius:8px; padding:0.75rem 1rem; margin-top:1rem; color:#fff; font-size:0.85rem;">
-                Subscripción pendiente de pago.
+            {% elif has_sub and sub_status == 'pending' and sub_plan == 'starter' %}
+            <div style="background:#0d0d0d; border:1px solid #ffc107; border-radius:8px; padding:0.6rem 0.8rem; margin-top:0.75rem; color:#fff; font-size:0.8rem;">
+                Pago pendiente.
             </div>
             <form method="post" action="{% url 'core:checkout' %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-acortar w-100 mt-2">Pagar con Mercado Pago</button>
+                <input type="hidden" name="plan" value="starter">
+                <button type="submit" class="btn btn-acortar w-100 mt-2" style="font-size:0.8rem;">Pagar con MP</button>
             </form>
-            {% elif has_sub and sub_status == 'cancelled' %}
-            <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-top:1rem; color:#fff; font-size:0.85rem;">
-                <strong style="color:#dc3545;">Subscripción cancelada.</strong>
+            {% elif has_sub and sub_status == 'cancelled' and sub_plan == 'starter' %}
+            <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.6rem 0.8rem; margin-top:0.75rem; color:#fff; font-size:0.8rem;">
+                <strong style="color:#dc3545;">Cancelada.</strong>
             </div>
             <form method="post" action="{% url 'core:checkout' %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-acortar w-100 mt-2">Reactivar con Mercado Pago</button>
+                <input type="hidden" name="plan" value="starter">
+                <button type="submit" class="btn btn-acortar w-100 mt-2" style="font-size:0.8rem;">Reactivar</button>
             </form>
             {% else %}
             <form method="post" action="{% url 'core:checkout' %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-acortar w-100 mt-3">Subscribirse con Mercado Pago</button>
+                <input type="hidden" name="plan" value="starter">
+                <button type="submit" class="btn btn-acortar w-100 mt-3" style="font-size:0.8rem;">Subscribirse</button>
             </form>
-            <p class="text-muted mt-2 text-center" style="font-size:0.75rem;">
-                Pago seguro · Tarjetas, transferencia, efectivo
-            </p>
+            <p class="text-light mt-1 text-center" style="font-size:0.7rem;">MP · Tarjetas, transferencia</p>
             {% endif %}
         </div>
     </div>
+
+    <!-- Plan Pro -->
+    <div class="col-lg-3 col-md-6">
+        <div class="acortalink-form h-100" style="border-color:#00ccff; box-shadow:0 0 15px rgba(0,204,255,0.08);">
+            <div class="text-center mb-3">
+                <span class="badge" style="background:#00ccff; color:#000; font-size:0.7rem; padding:0.35rem 0.7rem;">PRO</span>
+                <h3 class="mt-2 mb-1" style="color:#00ccff;">${{ plan_prices.pro }} ARS<small style="color:#ddd; font-size:0.65rem;"> / mes</small></h3>
+                <p style="color:#ddd; font-size:0.75rem;">cancelá cuando quieras</p>
+            </div>
+            <ul class="list-unstyled" style="color:#ddd; font-size:0.8rem;">
+                <li class="mb-2">✓ Todo lo del plan <strong style="color:#00ff41;">Starter</strong></li>
+                <li class="mb-2">✓ <strong>10.000 links</strong></li>
+                <li class="mb-2">✓ <strong>QR codes custom</strong> (colores, logo)</li>
+                <li class="mb-2">✓ <strong>Analytics</strong> + time series</li>
+                <li class="mb-2">✓ <strong>API</strong> 5.000 req/mes</li>
+                <li class="mb-2">✓ <strong>10 custom domains</strong></li>
+                <li class="mb-2">✓ <strong>SEO pages white-label</strong></li>
+                <li class="mb-2">✓ <strong>Cifrado de URLs</strong></li>
+                <li class="mb-2">✓ <strong>Ping automático</strong> a buscadores</li>
+                <li class="mb-2">✓ <strong>Sin retención de datos</strong></li>
+                <li class="mb-2">✓ Soporte <strong>prioritario por email</strong></li>
+            </ul>
+            {% if has_sub and sub_status == 'active' and sub_plan == 'pro' %}
+            <div style="background:#0d0d0d; border:1px solid #00ccff; border-radius:8px; padding:0.6rem 0.8rem; margin-top:0.75rem; color:#fff; font-size:0.8rem;">
+                <strong style="color:#00ccff;">✓ Plan actual</strong>
+            </div>
+            <form method="post" action="{% url 'core:cancelar_sub' %}" onsubmit="return confirm('¿Cancelar tu subscripción Pro?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger w-100 mt-2" style="border-color:#dc3545;color:#dc3545;font-size:0.75rem;">Cancelar</button>
+            </form>
+            {% elif has_sub and sub_status == 'pending' and sub_plan == 'pro' %}
+            <div style="background:#0d0d0d; border:1px solid #ffc107; border-radius:8px; padding:0.6rem 0.8rem; margin-top:0.75rem; color:#fff; font-size:0.8rem;">
+                Pago pendiente.
+            </div>
+            <form method="post" action="{% url 'core:checkout' %}">
+                {% csrf_token %}
+                <input type="hidden" name="plan" value="pro">
+                <button type="submit" class="btn btn-acortar w-100 mt-2" style="font-size:0.8rem;">Pagar con MP</button>
+            </form>
+            {% elif has_sub and sub_status == 'cancelled' and sub_plan == 'pro' %}
+            <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.6rem 0.8rem; margin-top:0.75rem; color:#fff; font-size:0.8rem;">
+                <strong style="color:#dc3545;">Cancelada.</strong>
+            </div>
+            <form method="post" action="{% url 'core:checkout' %}">
+                {% csrf_token %}
+                <input type="hidden" name="plan" value="pro">
+                <button type="submit" class="btn btn-acortar w-100 mt-2" style="font-size:0.8rem;">Reactivar</button>
+            </form>
+            {% else %}
+            <form method="post" action="{% url 'core:checkout' %}">
+                {% csrf_token %}
+                <input type="hidden" name="plan" value="pro">
+                <button type="submit" class="btn w-100 mt-3" style="background:#00ccff; color:#000; font-weight:700; font-size:0.8rem;">Subscribirse</button>
+            </form>
+            <p class="text-light mt-1 text-center" style="font-size:0.7rem;">MP · Tarjetas, transferencia</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Plan Business -->
+    <div class="col-lg-3 col-md-6">
+        <div class="acortalink-form h-100" style="border-color:#ff9900; box-shadow:0 0 15px rgba(255,153,0,0.08);">
+            <div class="text-center mb-3">
+                <span class="badge" style="background:#ff9900; color:#000; font-size:0.7rem; padding:0.35rem 0.7rem;">BUSINESS</span>
+                <h3 class="mt-2 mb-1" style="color:#ff9900;">${{ plan_prices.business }} ARS<small style="color:#ddd; font-size:0.65rem;"> / mes</small></h3>
+                <p style="color:#ddd; font-size:0.75rem;">cancelá cuando quieras</p>
+            </div>
+            <ul class="list-unstyled" style="color:#ddd; font-size:0.8rem;">
+                <li class="mb-2">✓ Todo lo del plan <strong style="color:#00ccff;">Pro</strong></li>
+                <li class="mb-2">✓ <strong>50.000 links</strong></li>
+                <li class="mb-2">✓ <strong>QR codes</strong> + bulk generation</li>
+                <li class="mb-2">✓ <strong>Analytics</strong> + export CSV</li>
+                <li class="mb-2">✓ <strong>API</strong> 25.000 req/mes + webhooks</li>
+                <li class="mb-2">✓ <strong>25 custom domains</strong></li>
+                <li class="mb-2">✓ <strong>5 usuarios</strong> (team)</li>
+                <li class="mb-2">✓ <strong>SEO pages white-label</strong></li>
+                <li class="mb-2">✓ <strong>Sin retención de datos</strong></li>
+                <li class="mb-2">✓ Soporte <strong>dedicado</strong> 24/7</li>
+            </ul>
+            {% if has_sub and sub_status == 'active' and sub_plan == 'business' %}
+            <div style="background:#0d0d0d; border:1px solid #ff9900; border-radius:8px; padding:0.6rem 0.8rem; margin-top:0.75rem; color:#fff; font-size:0.8rem;">
+                <strong style="color:#ff9900;">✓ Plan actual</strong>
+            </div>
+            <form method="post" action="{% url 'core:cancelar_sub' %}" onsubmit="return confirm('¿Cancelar tu subscripción Business?');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger w-100 mt-2" style="border-color:#dc3545;color:#dc3545;font-size:0.75rem;">Cancelar</button>
+            </form>
+            {% elif has_sub and sub_status == 'pending' and sub_plan == 'business' %}
+            <div style="background:#0d0d0d; border:1px solid #ffc107; border-radius:8px; padding:0.6rem 0.8rem; margin-top:0.75rem; color:#fff; font-size:0.8rem;">
+                Pago pendiente.
+            </div>
+            <form method="post" action="{% url 'core:checkout' %}">
+                {% csrf_token %}
+                <input type="hidden" name="plan" value="business">
+                <button type="submit" class="btn btn-acortar w-100 mt-2" style="font-size:0.8rem;">Pagar con MP</button>
+            </form>
+            {% elif has_sub and sub_status == 'cancelled' and sub_plan == 'business' %}
+            <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.6rem 0.8rem; margin-top:0.75rem; color:#fff; font-size:0.8rem;">
+                <strong style="color:#dc3545;">Cancelada.</strong>
+            </div>
+            <form method="post" action="{% url 'core:checkout' %}">
+                {% csrf_token %}
+                <input type="hidden" name="plan" value="business">
+                <button type="submit" class="btn btn-acortar w-100 mt-2" style="font-size:0.8rem;">Reactivar</button>
+            </form>
+            {% else %}
+            <form method="post" action="{% url 'core:checkout' %}">
+                {% csrf_token %}
+                <input type="hidden" name="plan" value="business">
+                <button type="submit" class="btn w-100 mt-3" style="background:#ff9900; color:#000; font-weight:700; font-size:0.8rem;">Subscribirse</button>
+            </form>
+            <p class="text-light mt-1 text-center" style="font-size:0.7rem;">MP · Tarjetas, transferencia</p>
+            {% endif %}
+        </div>
+    </div>
+
 </div>
+
+<!-- Add-ons -->
+<div class="text-center mb-4" style="max-width:1100px; margin:0 auto;">
+    <div class="acortalink-form" style="border-color:#222; padding:1rem 1.5rem;">
+        <p style="color:#ddd; font-size:0.8rem; margin:0;">
+            <strong style="color:#ddd;">Add-ons:</strong>
+            Registro de dominio $15/año &nbsp;·&nbsp;
+            Dominio adicional $3/mes &nbsp;·&nbsp;
+            +10.000 links $5/mes &nbsp;·&nbsp;
+            +10.000 API req $4/mes
+        </p>
+    </div>
+</div>
+
+{% if has_sub and sub_status == 'active' and sub_plan != 'starter' and sub_plan != 'pro' and sub_plan != 'business' %}
+{# fallback for legacy subscriptions without plan field #}
+<div class="text-center mb-3" style="max-width:900px; margin:0 auto;">
+    <form method="post" action="{% url 'core:cancelar_sub' %}" onsubmit="return confirm('¿Cancelar tu subscripción?');">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger" style="border-color:#dc3545;color:#dc3545;font-size:0.8rem;">Cancelar subscripción actual</button>
+    </form>
+</div>
+{% endif %}
 
 <div class="text-center">
     <a href="{% url 'core:index' %}" class="console-link">Volver al acortador</a>

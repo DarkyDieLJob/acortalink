@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block meta_title %}Política de Privacidad — Acortador de Links{% endblock %}
+{% block meta_title %}Política de Privacidad — Acortalink de Links{% endblock %}
 {% block meta_description %}Política de privacidad del acortador de links de DieL. Información sobre cookies, datos recopilados y opciones del usuario.{% endblock %}
 {% block meta_robots %}index, follow{% endblock %}
 
@@ -9,33 +9,33 @@
 <div style="max-width:800px;margin:0 auto;">
     <h2 class="console-heading mb-4">Política de Privacidad</h2>
 
-    <div class="acortador-form">
+    <div class="acortalink-form">
         <h4 class="mb-3">Cookies y datos recopilados</h4>
-        <p class="text-muted mb-3">
+        <p class="text-light mb-3">
             Este sitio utiliza cookies y tecnologías similares para funcionar correctamente y para mostrar publicidad.
             A continuación se detalla qué información se recopila y cómo se utiliza.
         </p>
 
         <h4 class="mb-3 mt-4">Cookies de funcionalidad</h4>
-        <ul class="text-muted">
-            <li><strong>Session cookie:</strong> necesaria para el inicio de sesión y funcionamiento del acortador.</li>
+        <ul class="text-light">
+            <li><strong>Session cookie:</strong> necesaria para el inicio de sesión y funcionamiento de Acortalink.</li>
             <li><strong>CSRF cookie:</strong> protección de seguridad de Django, obligatoria para formularios.</li>
         </ul>
 
         <h4 class="mb-3 mt-4">Cookies publicitarias (Google AdSense)</h4>
-        <p class="text-muted mb-3">
+        <p class="text-light mb-3">
             Este sitio muestra anuncios a través de Google AdSense. Google utiliza cookies para mostrar
             anuncios basados en visitas anteriores a este u otros sitios web. El uso de cookies de
             publicidad por parte de Google permite a Google y sus partners mostrar anuncios a tus
             usuarios basados en su visita a tus sitios y/o otros sitios en Internet.
         </p>
-        <ul class="text-muted">
+        <ul class="text-light">
             <li>Los usuarios pueden inhabilitar la publicidad personalizada visitando <a href="https://www.google.com/settings/ads" target="_blank" rel="noopener">Configuración de anuncios de Google</a>.</li>
             <li>Para más información sobre cómo Google usa los datos, visitá <a href="https://policies.google.com/technologies/partner-sites" target="_blank" rel="noopener">Cómo Google usa la información de los sitios</a>.</li>
         </ul>
 
         <h4 class="mb-3 mt-4">Datos de usuario</h4>
-        <ul class="text-muted">
+        <ul class="text-light">
             <li><strong>Cuenta:</strong> nombre de usuario y contraseña (hash). No se solicita email obligatoriamente.</li>
             <li><strong>Links acortados:</strong> las URLs que acortás se almacenan para generar el redirect.</li>
             <li><strong>Estadísticas:</strong> contador de clicks por link. No se almacena información personal de quienes visitan tus links.</li>
@@ -43,14 +43,14 @@
         </ul>
 
         <h4 class="mb-3 mt-4">Tus opciones</h4>
-        <ul class="text-muted">
+        <ul class="text-light">
             <li>Podés eliminar tu cuenta y todos tus links en cualquier momento desde el dashboard.</li>
             <li>Podés rechazar las cookies publicitarias mediante el banner de consentimiento.</li>
             <li>Podés configurar tu navegador para bloquear todas las cookies.</li>
         </ul>
 
         <h4 class="mb-3 mt-4">Contacto</h4>
-        <p class="text-muted">
+        <p class="text-light">
             Para consultas sobre privacidad, contactame a través del <a href="{% url 'contacto' %}">formulario de contacto</a>.
         </p>
     </div>

@@ -5,13 +5,13 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block meta_title %}Acortador de Links — Sin anuncios ni contadores molestos{% endblock %}</title>
-    <meta name="description" content="{% block meta_description %}Acortá tus links sin anuncios ni contadores molestos. Redirect instantáneo y gratuito. Versión premium con SEO indexable y bulk CSV.{% endblock %}">
+    <title>{% block meta_title %}Acortalink — Acortalink de links con SEO y dominios propios{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Acortá tus links con SEO indexable, dominios propios y analytics. Sin anuncios ni contadores molestos. Redirect instantáneo y gratuito.{% endblock %}">
     <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
 
     <meta property="og:type" content="website">
-    <meta property="og:title" content="{% block og_title %}Acortador de Links — DieL{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}Acortá tus links sin anuncios ni contadores molestos.{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}Acortalink — Acortalink de links con SEO{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Acortá tus links con SEO indexable, dominios propios y analytics. Sin anuncios ni contadores molestos.{% endblock %}">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
 
     <link rel="canonical" href="{{ request.build_absolute_uri }}">
@@ -46,7 +46,7 @@
         .console-link:hover { color: #00cc33; text-decoration: underline; }
 
     /* Layout con sidebars publicitarias */
-    .acortador-layout {
+    .acortalink-layout {
         display: flex;
         gap: 1rem;
         max-width: 1400px;
@@ -59,7 +59,7 @@
     }
     .ad-sidebar-left { order: 0; }
     .ad-sidebar-right { order: 2; }
-    .acortador-main {
+    .acortalink-main {
         flex: 1;
         min-width: 0;
         order: 1;
@@ -70,7 +70,7 @@
         border-radius: 8px;
         padding: 1rem;
         text-align: center;
-        color: #444;
+        color: #888;
         font-size: 0.75rem;
         position: sticky;
         top: 1rem;
@@ -82,17 +82,17 @@
     }
 
     /* Navbar del acortador */
-    .acortador-nav {
+    .acortalink-nav {
         background: #000;
         border-bottom: 1px solid #1a1a1a;
         padding: 0.5rem 0;
     }
-    .acortador-nav .nav-link {
-        color: #888;
+    .acortalink-nav .nav-link {
+        color: #ddd;
         font-size: 0.85rem;
     }
-    .acortador-nav .nav-link:hover { color: #00ff41; }
-    .acortador-nav .brand {
+    .acortalink-nav .nav-link:hover { color: #00ff41; }
+    .acortalink-nav .brand {
         color: #00ff41;
         font-weight: 700;
         text-decoration: none;
@@ -100,19 +100,32 @@
     }
 
     /* Form de acortar */
-    .acortador-form {
+    .acortalink-form {
         background: #111;
-        border: 1px solid #222;
+        border: 1px solid #333;
         border-radius: 12px;
         padding: 2rem;
     }
-    .acortador-form input[type="text"] {
+    .acortalink-form input[type="text"],
+    .acortalink-form input[type="email"],
+    .acortalink-form input[type="password"],
+    .acortalink-form input[type="url"],
+    .acortalink-form input[type="number"],
+    .acortalink-form textarea,
+    .acortalink-form select {
         background: #0a0a0a;
-        border: 1px solid #333;
+        border: 1px solid #555;
         color: #fff;
         font-size: 1.1rem;
     }
-    .acortador-form input[type="text"]:focus {
+    .acortalink-form input::placeholder,
+    .acortalink-form textarea::placeholder {
+        color: #888;
+        opacity: 1;
+    }
+    .acortalink-form input:focus,
+    .acortalink-form textarea:focus,
+    .acortalink-form select:focus {
         border-color: #00ff41;
         box-shadow: 0 0 0 0.2rem rgba(0,255,65,0.15);
     }
@@ -127,8 +140,26 @@
         color: #000;
     }
 
+    /* Inputs globales — fuera de .acortalink-form también */
+    input[type="text"], input[type="email"], input[type="password"],
+    input[type="url"], input[type="number"], textarea, select {
+        background: #0a0a0a !important;
+        border: 1px solid #555 !important;
+        color: #fff !important;
+    }
+    input::placeholder, textarea::placeholder {
+        color: #888;
+        opacity: 1;
+    }
+    input:focus, textarea:focus, select:focus {
+        border-color: #00ff41 !important;
+        box-shadow: 0 0 0 0.2rem rgba(0,255,65,0.15) !important;
+    }
+    .form-control { background: #0a0a0a !important; border-color: #555 !important; color: #fff !important; }
+    .form-label { color: #ddd !important; }
+
     /* Resultado */
-    .acortador-result {
+    .acortalink-result {
         background: #0d1a0d;
         border: 1px solid #00ff41;
         border-radius: 8px;
@@ -147,65 +178,180 @@
         border-radius: 8px;
         overflow: hidden;
     }
+    .links-table table,
+    .links-table th,
+    .links-table td {
+        background: #111 !important;
+        color: #ddd;
+        border-color: #333;
+    }
     .links-table th {
-        background: #1a1a1a;
-        color: #888;
+        background: #1a1a1a !important;
+        color: #ddd;
         font-size: 0.8rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
-    .links-table td { color: #ccc; }
+    .links-table td { color: #ddd; }
+    .links-table tbody tr:hover td {
+        background: #1a1a1a !important;
+    }
     .links-table .short-code { color: #00ff41; font-weight: 700; }
 
+    /* Edit link tabs */
+    .edit-tabs {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .edit-tab {
+        background: #111;
+        border: 1px solid #333;
+        color: #ddd;
+        padding: 0.5rem 1rem;
+        border-radius: 8px 8px 0 0;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.15s;
+    }
+    .edit-tab:hover { border-color: #555; color: #fff; }
+    .edit-tab.active {
+        background: #111;
+        border-color: #00ff41;
+        color: #00ff41;
+        border-bottom: 2px solid #111;
+        margin-bottom: -1px;
+    }
+    .edit-panel { display: none; }
+    .edit-panel.active { display: block; }
+
+    /* SEO preview cards */
+    .seo-preview-google {
+        background: #fff;
+        border-radius: 8px;
+        padding: 1rem;
+        max-width: 600px;
+    }
+    .seo-preview-google-url {
+        font-size: 0.75rem;
+        color: #202124;
+        margin-bottom: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .seo-preview-google-title {
+        font-size: 1.1rem;
+        color: #1a0dab;
+        margin-bottom: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+    }
+    .seo-preview-google-desc {
+        font-size: 0.8rem;
+        color: #4d5156;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .seo-preview-social {
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        max-width: 500px;
+    }
+    .seo-preview-social-img {
+        width: 100%;
+        height: 160px;
+        background: #e9ebee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .seo-preview-social-body {
+        padding: 0.6rem 0.8rem;
+    }
+    .seo-preview-social-domain {
+        font-size: 0.7rem;
+        color: #65676b;
+        text-transform: uppercase;
+        margin-bottom: 2px;
+    }
+    .seo-preview-social-title {
+        font-size: 0.9rem;
+        color: #050505;
+        font-weight: 600;
+        margin-bottom: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+    .seo-preview-social-desc {
+        font-size: 0.75rem;
+        color: #65676b;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
     /* Badges */
-    .badge-free { background: #333; color: #aaa; }
+    .badge-free { background: #444; color: #eee; }
     .badge-premium { background: #0dcaf0; color: #000; }
 
     /* Navbar dropdown */
-    .acortador-nav .dropdown-toggle {
-        color: #888;
+    .acortalink-nav .dropdown-toggle {
+        color: #ddd;
         font-size: 0.85rem;
         background: transparent;
-        border: 1px solid #333;
+        border: 1px solid #555;
         border-radius: 6px;
         padding: 0.35rem 0.75rem;
         cursor: pointer;
     }
-    .acortador-nav .dropdown-toggle:hover,
-    .acortador-nav .dropdown-toggle.show {
+    .acortalink-nav .dropdown-toggle:hover,
+    .acortalink-nav .dropdown-toggle.show {
         color: #00ff41;
         border-color: #00ff41;
     }
-    .acortador-nav .dropdown-toggle::after {
+    .acortalink-nav .dropdown-toggle::after {
         margin-left: 0.5rem;
         font-size: 0.7rem;
     }
-    .acortador-nav .dropdown-menu {
+    .acortalink-nav .dropdown-menu {
         background: #0d0d0d;
         border: 1px solid #222;
         border-radius: 8px;
         min-width: 200px;
         padding: 0.5rem 0;
     }
-    .acortador-nav .dropdown-item {
-        color: #aaa;
+    .acortalink-nav .dropdown-item {
+        color: #ddd;
         font-size: 0.85rem;
         padding: 0.5rem 1rem;
     }
-    .acortador-nav .dropdown-item:hover {
+    .acortalink-nav .dropdown-item:hover {
         background: #1a1a1a;
         color: #00ff41;
     }
-    .acortador-nav .dropdown-divider {
+    .acortalink-nav .dropdown-divider {
         border-color: #222;
     }
-    .acortador-nav .dropdown-header {
-        color: #555;
+    .acortalink-nav .dropdown-header {
+        color: #ddd;
         font-size: 0.7rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
-    .acortador-nav .user-badge {
+    .acortalink-nav .user-badge {
         display: inline-block;
         width: 20px; height: 20px;
         background: #00ff41;
@@ -217,7 +363,7 @@
         font-weight: 700;
         margin-right: 0.4rem;
     }
-    .acortador-nav .premium-tag {
+    .acortalink-nav .premium-tag {
         background: #0dcaf0;
         color: #000;
         font-size: 0.65rem;
@@ -228,16 +374,16 @@
     }
 
     /* Footer del acortador */
-    .acortador-footer {
+    .acortalink-footer {
         background: #000;
         border-top: 1px solid #1a1a1a;
         padding: 1rem 0;
         text-align: center;
         font-size: 0.75rem;
-        color: #444;
+        color: #ddd;
     }
-    .acortador-footer a { color: #555; text-decoration: none; }
-    .acortador-footer a:hover { color: #00ff41; }
+    .acortalink-footer a { color: #ddd; text-decoration: none; }
+    .acortalink-footer a:hover { color: #00ff41; }
 
     /* Toast container */
     #toast-container {
@@ -249,9 +395,9 @@
 </head>
 <body>
 
-<nav class="acortador-nav">
+<nav class="acortalink-nav">
     <div class="container d-flex justify-content-between align-items-center">
-        <a href="{% url 'core:index' %}" class="brand">⚡ Acortador</a>
+        <a href="{% url 'core:index' %}" class="brand">⚡ Acortalink</a>
         <div class="d-flex gap-3 align-items-center">
             {% if user.is_authenticated %}
                 <a href="{% url 'core:mis_links' %}" class="nav-link">Mis links</a>
@@ -277,7 +423,7 @@
                             </form>
                         </li>
                         {% else %}
-                        <li><a class="dropdown-item" href="{% url 'core:subscribir' %}">★ Subscribirse ($2/mes)</a></li>
+                        <li><a class="dropdown-item" href="{% url 'core:subscribir' %}">★ Ver planes</a></li>
                         {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'core:contacto' %}">✉ Contacto</a></li>
@@ -292,7 +438,8 @@
     </div>
 </nav>
 
-<div class="acortador-layout mt-4 px-3" style="flex:1;">
+<div class="acortalink-layout mt-4 px-3" style="flex:1;">
+    {% block ad_sidebar_left %}
     <!-- Sidebar publicitario izquierdo (solo free) -->
     <div class="ad-sidebar ad-sidebar-left" id="ad-left">
         <div class="ad-placeholder">
@@ -301,9 +448,10 @@
             <p style="margin-top:0.5rem;font-size:0.65rem;">AdSense slot<br>(200×600)</p>
         </div>
     </div>
+    {% endblock %}
 
     <!-- Contenido principal -->
-    <div class="acortador-main">
+    <div class="acortalink-main">
         {% if messages %}
         {% for message in messages %}
         <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
@@ -315,6 +463,7 @@
         {% block acortador_content %}{% endblock %}
     </div>
 
+    {% block ad_sidebar_right %}
     <!-- Sidebar publicitario derecho (solo free) -->
     <div class="ad-sidebar ad-sidebar-right" id="ad-right">
         <div class="ad-placeholder">
@@ -323,15 +472,16 @@
             <p style="margin-top:0.5rem;font-size:0.65rem;">AdSense slot<br>(200×600)</p>
         </div>
     </div>
+    {% endblock %}
 </div>
 
-<footer class="acortador-footer">
+<footer class="acortalink-footer">
     <div class="container">
-        <a href="{% url 'core:index' %}">⚡ Acortador</a> ·
+        <a href="{% url 'core:index' %}">⚡ Acortalink</a> ·
         <a href="{% url 'core:privacidad' %}">Privacidad</a> ·
         <a href="/">Portfolio</a>
         <br>
-        &copy; {% now "Y" %} DieL — Sin anuncios en tus links.
+        &copy; {% now "Y" %} Acortalink — Sin anuncios en tus links.
     </div>
 </footer>
 

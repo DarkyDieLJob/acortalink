@@ -1,0 +1,249 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Dominios personalizados — Acortalink | DieL{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block acortador_content %}
+
+<div style="max-width:760px; margin:0 auto;">
+    <h2 class="console-heading mb-3">Dominios personalizados</h2>
+
+    <div style="background:#0d0d0d; border:1px solid #333; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1.5rem; color:#ddd; font-size:0.8rem;">
+        Plan <strong style="color:#00ff41;">{{ plan|title }}</strong> —
+        {{ domain_count }}/{{ domain_limit }} dominios usados
+    </div>
+
+    {% if checkout_status == 'success' %}
+    <div style="background:#0d1a0d; border:1px solid #00ff41; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+        <strong style="color:#00ff41;">✓ Pago aprobado.</strong> Tu dominio está siendo registrado. Esto puede tardar unos minutos.
+    </div>
+    {% elif checkout_status == 'failure' %}
+    <div style="background:#1a0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+        <strong style="color:#dc3545;">✗ Pago rechazado.</strong> Intentá nuevamente.
+    </div>
+    {% elif checkout_status == 'pending' %}
+    <div style="background:#0d0d0d; border:1px solid #ffc107; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+        <strong style="color:#ffc107;">⏳ Pago pendiente.</strong> Te avisaremos cuando se acredite.
+    </div>
+    {% endif %}
+
+    {% if error %}
+    <div style="background:#1a0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+        <strong style="color:#dc3545;">{{ error }}</strong>
+    </div>
+    {% endif %}
+
+    <!-- Tabs -->
+    <div class="edit-tabs mb-3">
+        <button type="button" class="edit-tab active" data-tab="byod">🌐 Traer mi dominio</button>
+        <!-- <button type="button" class="edit-tab" data-tab="buy">🛒 Comprar dominio</button> -->
+    </div>
+
+    <!-- Tab: BYOD -->
+    <div class="edit-panel active" data-panel="byod">
+        <div class="acortalink-form mb-3">
+            <h5 class="mb-3" style="color:#00ff41;">Traer mi dominio</h5>
+            <p style="color:#ddd; font-size:0.85rem; margin-bottom:1rem;">
+                ¿Ya tenés un dominio? Configuralo acá. Vas a necesitar acceso a tu panel de DNS.
+            </p>
+
+            <div style="background:#0a0a0a; border:1px solid #333; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1.25rem; color:#ddd; font-size:0.8rem;">
+                <strong style="color:#00ff41;">Pasos:</strong><br>
+                1. Agregá tu dominio abajo<br>
+                2. En tu panel de DNS, creá un registro <strong style="color:#fff;">CNAME</strong> apuntando a <code style="color:#00ff41;">{{ cname_target }}</code><br>
+                3. Volvé acá y clickeá "Verificar DNS"<br>
+                4. Cuando se verifique, el dominio queda <strong style="color:#00ff41;">activo</strong>
+            </div>
+
+            {% if domain_count < domain_limit %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add">
+                <label class="form-label text-light" style="font-size:0.8rem;">Tu dominio</label>
+                <input type="text" name="domain" class="form-control mb-2"
+                       placeholder="mislinks.com" required>
+                <small class="text-light" style="font-size:0.72rem; display:block; margin-bottom:0.75rem;">
+                    Sin http:// ni www. Solo el dominio base.
+                </small>
+                <button type="submit" class="btn btn-sm btn-acortar">Agregar dominio</button>
+            </form>
+            {% else %}
+            <div style="background:#0d0d0d; border:1px solid #ffc107; border-radius:8px; padding:0.75rem 1rem; color:#ddd; font-size:0.85rem;">
+                Alcanzaste el límite de dominios para tu plan.
+                <a href="{% url 'core:subscribir' %}" style="color:#00ff41;">Upgradear plan →</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tab: Buy (hidden — for future use when registrar affiliate/reseller is enabled)
+    <div class="edit-panel" data-panel="buy">
+        <div class="acortalink-form mb-3">
+            <h5 class="mb-3" style="color:#00ff41;">Comprar dominio</h5>
+            <p style="color:#ddd; font-size:0.85rem; margin-bottom:1rem;">
+                Buscá disponibilidad y comprá el dominio directamente desde acá.
+                Pago via MercadoPago, registro automático.
+            </p>
+
+            <!-- Search form -->
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="search">
+                <label class="form-label text-light" style="font-size:0.8rem;">Buscar dominio</label>
+                <div class="input-group mb-2">
+                    <input type="text" name="domain" class="form-control"
+                           placeholder="mislinks.com" required>
+                    <button type="submit" class="btn btn-sm btn-acortar">Buscar</button>
+                </div>
+                <small class="text-light" style="font-size:0.72rem;">
+                    Ingresá el dominio que querés comprar. Te decimos si está disponible y su precio.
+                </small>
+            </form>
+
+            <!-- Search results -->
+            {% if search_result %}
+            <div style="background:#0a0a0a; border:1px solid {% if search_result.available %}#00ff41{% else %}#dc3545{% endif %}; border-radius:8px; padding:1rem 1.25rem; margin-top:1rem;">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                        <span style="font-size:1.1rem; font-weight:700; color:#fff;">{{ search_result.domain }}</span>
+                        {% if search_result.available %}
+                        <span style="color:#00ff41; font-size:0.85rem; margin-left:0.5rem;">✓ Disponible</span>
+                        {% else %}
+                        <span style="color:#dc3545; font-size:0.85rem; margin-left:0.5rem;">✗ No disponible</span>
+                        {% endif %}
+                    </div>
+                    {% if search_result.available and search_result.price %}
+                    <div style="text-align:right;">
+                        <div style="color:#00ff41; font-size:1.2rem; font-weight:700;">${{ search_result.price|floatformat:0 }} ARS</div>
+                        <small style="color:#ddd; font-size:0.7rem;">por 1 año</small>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if search_result.available and search_result.price and domain_count < domain_limit %}
+                <form method="post" style="margin-top:1rem;">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="purchase">
+                    <input type="hidden" name="domain" value="{{ search_result.domain }}">
+                    <button type="submit" class="btn btn-acortar w-100" style="font-size:0.9rem;">
+                        Comprar {{ search_result.domain }} — ${{ search_result.price|floatformat:0 }} ARS
+                    </button>
+                </form>
+                {% elif search_result.available and not search_result.price %}
+                <p style="color:#ffc107; font-size:0.8rem; margin-top:0.75rem; margin-bottom:0;">
+                    Este TLD ({{ search_result.tld }}) no tiene precio configurado. Contactanos para comprarlo.
+                </p>
+                {% elif search_result.available and domain_count >= domain_limit %}
+                <p style="color:#ffc107; font-size:0.8rem; margin-top:0.75rem; margin-bottom:0;">
+                    Alcanzaste el límite de dominios de tu plan.
+                    <a href="{% url 'core:subscribir' %}" style="color:#00ff41;">Upgradear →</a>
+                </p>
+                {% elif not search_result.available %}
+                <p style="color:#ddd; font-size:0.8rem; margin-top:0.75rem; margin-bottom:0;">
+                    Este dominio ya está registrado. Probá con otra extensión (.net, .org, .dev, .app).
+                </p>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Price table -->
+            <div style="margin-top:1.5rem;">
+                <p style="color:#ddd; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Precios por extensión (1 año)</p>
+                <div class="d-flex flex-wrap gap-2">
+                    {% for tld, price in domain_prices.items %}
+                    <span style="background:#0a0a0a; border:1px solid #333; border-radius:6px; padding:0.3rem 0.7rem; color:#ddd; font-size:0.78rem;">
+                        <strong style="color:#00ff41;">{{ tld }}</strong> — ${{ price|floatformat:0 }} ARS
+                    </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    -->
+
+    <!-- Domain list -->
+    {% if domains %}
+    <div class="acortalink-form">
+        <h5 class="mb-3" style="color:#00ff41;">Mis dominios</h5>
+        <div class="table-responsive">
+            <table class="table links-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Dominio</th>
+                        <th>Tipo</th>
+                        <th>Links</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in domains %}
+                    <tr>
+                        <td style="color:#00ff41; font-weight:700;">{{ d.domain }}</td>
+                        <td style="font-size:0.75rem;">
+                            {% if d.source == 'purchased' %}
+                                <span style="color:#00ccff;">Comprado</span>
+                            {% else %}
+                                <span style="color:#ddd;">Propio</span>
+                            {% endif %}
+                        </td>
+                        <td style="font-size:0.85rem;">{{ d.link_count }}</td>
+                        <td>
+                            {% if d.status == 'active' %}
+                                <span style="color:#00ff41;">✓ Activo</span>
+                            {% elif d.status == 'pending' %}
+                                <span style="color:#ffc107;">⏳ Pendiente</span>
+                                {% if d.source == 'purchased' and d.purchase_status == 'purchase_pending' %}
+                                <div style="font-size:0.68rem; color:#ffc107;">Pago pendiente</div>
+                                {% endif %}
+                            {% elif d.status == 'failed' %}
+                                <span style="color:#dc3545;">✗ Fallido</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% if d.status != 'active' and d.source == 'byod' %}
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="verify">
+                                    <input type="hidden" name="pk" value="{{ d.pk }}">
+                                    <button type="submit" style="color:#00ff41; background:none; border:1px solid #00ff41; border-radius:4px; cursor:pointer; font-size:0.72rem; padding:0.15rem 0.5rem;">
+                                        Verificar DNS
+                                    </button>
+                                </form>
+                                {% endif %}
+                                <form method="post" style="display:inline;"
+                                      onsubmit="return confirm('¿Eliminar {{ d.domain }}?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="delete">
+                                    <input type="hidden" name="pk" value="{{ d.pk }}">
+                                    <button type="submit" style="color:#dc3545; background:none; border:none; cursor:pointer; font-size:0.8rem;">Eliminar</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mt-4 text-center">
+        <a href="{% url 'core:perfil' %}" class="console-link">← Volver al perfil</a>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.edit-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+        var target = this.dataset.tab;
+        document.querySelectorAll('.edit-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.edit-panel').forEach(function(p) { p.classList.remove('active'); });
+        this.classList.add('active');
+        document.querySelector('[data-panel="' + target + '"]').classList.add('active');
+    });
+});
+</script>
+
+{% endblock %}

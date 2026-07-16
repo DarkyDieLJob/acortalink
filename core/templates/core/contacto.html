@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block meta_title %}Contacto — Acortador Premium | DieL{% endblock %}
+{% block meta_title %}Contacto — Acortalink Premium | DieL{% endblock %}
 {% block meta_description %}Contactate para activar tu subscripción premium del acortador de links.{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
@@ -23,19 +23,19 @@
     </div>
     {% endif %}
 
-    <div class="acortador-form">
+    <div class="acortalink-form">
         <form method="post">
             {% csrf_token %}
             <div class="mb-3">
-                <label class="form-label text-muted" style="font-size:0.8rem;">Nombre</label>
+                <label class="form-label text-light" style="font-size:0.8rem;">Nombre</label>
                 {{ form.nombre }}
             </div>
             <div class="mb-3">
-                <label class="form-label text-muted" style="font-size:0.8rem;">Email</label>
+                <label class="form-label text-light" style="font-size:0.8rem;">Email</label>
                 {{ form.email }}
             </div>
             <div class="mb-3">
-                <label class="form-label text-muted" style="font-size:0.8rem;">Mensaje</label>
+                <label class="form-label text-light" style="font-size:0.8rem;">Mensaje</label>
                 {{ form.mensaje }}
             </div>
             <button type="submit" class="btn btn-acortar w-100">Enviar</button>

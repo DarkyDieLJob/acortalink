@@ -21,7 +21,7 @@ stripe.api_key = getattr(settings, 'STRIPE_SECRET_KEY', '') or None
 
 # --- Constants ---
 
-PRODUCT_NAME = 'Acortador Premium'
+PRODUCT_NAME = 'Acortalink Premium'
 PRODUCT_DESCRIPTION = 'Subscripción premium del acortador de links'
 FEATURE_NAME = 'Premium Features'
 FEATURE_LOOKUP_KEY = 'acortador_premium'

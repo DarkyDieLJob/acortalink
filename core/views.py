@@ -27,8 +27,11 @@ import stripe
 from acortador_project.rate_limit import rate_limit, burst_limit, client_ip
 
 from .decorators import acortador_login_required, subscription_required
-from .forms import ContactoAcortadorForm
-from .models import ShortLink, Subscription, LinkReport, EmailVerification
+from .forms import ContactoAcortalinkForm
+from .models import (
+    ShortLink, Subscription, LinkReport, EmailVerification,
+    CustomDomain, TeamMember, Webhook, ApiKey,
+)
 from . import stripe_service
 from . import mercadopago_service
 from . import verification_service
@@ -76,10 +79,8 @@ _BLOCKED_DOMAINS = {
 }
 
 # Límites de links por usuario
-FREE_LINK_LIMIT = 50
-PREMIUM_LINK_LIMIT = 1000
-# Expiración de links free sin clicks (días)
-FREE_EXPIRY_DAYS = 90
+FREE_LINK_LIMIT = 30
+FREE_EXPIRY_DAYS = 30
 
 
 def _normalize_url(url):
@@ -171,7 +172,11 @@ def _validate_url(url, request=None):
 
 def _check_link_limit(user):
     """Verifica si el usuario puede crear más links."""
-    limit = PREMIUM_LINK_LIMIT if _is_premium(user) else FREE_LINK_LIMIT
+    sub = getattr(user, 'subscription', None)
+    if sub and sub.is_active:
+        limit = Subscription.PLAN_LINK_LIMITS.get(sub.plan, 3000)
+    else:
+        limit = FREE_LINK_LIMIT
     count = ShortLink.objects.filter(owner=user).count()
     return count < limit, limit
 
@@ -228,6 +233,13 @@ def index(request):
     short_url = None
     error = None
 
+    is_premium = request.user.is_authenticated and _is_premium(request.user)
+    user_domains = []
+    if is_premium:
+        user_domains = list(CustomDomain.objects.filter(
+            owner=request.user, status=CustomDomain.STATUS_ACTIVE,
+        ))
+
     if request.method == 'POST':
         if not request.user.is_authenticated:
             return redirect('core:login')
@@ -251,31 +263,48 @@ def index(request):
                 ).first()
                 if existing:
                     created_link = existing
-                    short_url = request.build_absolute_uri(
-                        f'/s/{existing.short_code}/'
-                    )
+                    if existing.custom_domain:
+                        short_url = f'https://{existing.custom_domain.domain}/s/{existing.short_code}/'
+                    else:
+                        short_url = request.build_absolute_uri(
+                            f'/s/{existing.short_code}/'
+                        )
                 else:
                     can_create, limit = _check_link_limit(request.user)
                     if not can_create:
                         error = f'Alcanzaste el límite de {limit} links. {"Subscribite premium para más." if not _is_premium(request.user) else ""}'
                     else:
+                        # Custom domain selection
+                        selected_domain = None
+                        if is_premium:
+                            domain_pk = request.POST.get('custom_domain', '')
+                            if domain_pk:
+                                selected_domain = next(
+                                    (d for d in user_domains if str(d.pk) == domain_pk), None
+                                )
+
                         link = ShortLink.objects.create(
                             short_code=_generate_short_code(),
                             original_url=original_url,
                             owner=request.user,
                             is_premium=_is_premium(request.user),
+                            custom_domain=selected_domain,
                         )
                         created_link = link
                         cache.delete(_redirect_cache_key(link.short_code))
-                        short_url = request.build_absolute_uri(
-                            f'/s/{link.short_code}/'
-                        )
+                        if link.custom_domain:
+                            short_url = f'https://{link.custom_domain.domain}/s/{link.short_code}/'
+                        else:
+                            short_url = request.build_absolute_uri(
+                                f'/s/{link.short_code}/'
+                            )
 
     return render(request, 'core/index.html', {
         'created_link': created_link,
         'short_url': short_url,
         'error': error,
-        'is_premium': request.user.is_authenticated and _is_premium(request.user),
+        'is_premium': is_premium,
+        'user_domains': user_domains,
     })
 
 
@@ -305,12 +334,8 @@ def redirect_view(request, code):
     Free: 302 instantáneo, no indexable.
     Premium con SEO: página HTML indexable con countdown.
     Premium sin SEO: 302 instantáneo.
-    Links free expirados (90 días sin clicks): 404.
-
-    Optimizado para 750 usuarios concurrentes:
-    - Redis cache en redirect URL (99% cache hit, 0 DB queries)
-    - Click batching via Redis INCR + SADD (no iterar todos los links en flush)
-    - Rate limit por IP antes de cualquier DB/cache lookup
+    Links free expirados (30 días sin clicks): 404.
+    Password protection: si el link tiene password, muestra form.
     """
     # Rate limit por IP: 60 redirects/minuto (prevenir DoS) — antes de DB lookup
     ip = client_ip(request)
@@ -322,8 +347,16 @@ def redirect_view(request, code):
     cache_key = _redirect_cache_key(code)
     cached = cache.get(cache_key)
     if cached is not None:
-        # cached = {'url': str, 'pk': int, 'is_premium': bool, 'seo_title': str}
+        # cached = {'url': str, 'pk': int, 'is_premium': bool, 'seo_title': str, 'has_password': bool}
         _track_click(cached['pk'])
+        _track_click_event(cached['pk'], request)
+        if cached.get('has_password'):
+            link = ShortLink.objects.only(
+                'pk', 'short_code', 'original_url', 'is_premium', 'password_hash',
+                'seo_title', 'seo_description', 'seo_image', 'redirect_seconds',
+            ).filter(short_code=code).first()
+            if link:
+                return _handle_password_redirect(request, link)
         if cached.get('is_premium') and cached.get('seo_title'):
             # SEO pages necesitan render completo — query DB solo en este caso
             link = ShortLink.objects.only(
@@ -338,7 +371,7 @@ def redirect_view(request, code):
     link = ShortLink.objects.only(
         'pk', 'short_code', 'original_url', 'is_premium',
         'seo_title', 'seo_description', 'seo_image', 'redirect_seconds',
-        'creado', 'ultimo_click', 'clicks',
+        'password_hash', 'creado', 'ultimo_click', 'clicks',
     ).filter(short_code=code).first()
 
     if not link:
@@ -360,11 +393,17 @@ def redirect_view(request, code):
         'pk': link.pk,
         'is_premium': link.is_premium,
         'seo_title': link.seo_title or '',
+        'has_password': bool(link.password_hash),
     }
     cache.set(cache_key, cache_data, timeout=REDIRECT_CACHE_TTL)
 
     # Click tracking: INCR + SADD para flush eficiente
     _track_click(link.pk)
+    _track_click_event(link.pk, request)
+
+    # Password protection
+    if link.password_hash:
+        return _handle_password_redirect(request, link)
 
     if link.is_premium and link.seo_title:
         return render(request, 'core/redirect_page.html', {
@@ -390,6 +429,77 @@ def _track_click(link_pk):
         cache.sadd(getattr(settings, 'CLICK_TRACKING_SET_KEY', 'clicks:pending_pks'), link_pk)
     except (AttributeError, NotImplementedError):
         pass  # LocMemCache no soporta sadd — fallback a iteración
+
+
+def _track_click_event(link_pk, request):
+    """Encola evento de click para analytics geo/device/referrer en Redis.
+
+    Se persiste en batch desde flush_clicks para evitar 1 DB write por click.
+    """
+    import json
+    event_key = f'click_events:{link_pk}'
+    event = {
+        'pk': link_pk,
+        'ip': client_ip(request),
+        'ua': request.META.get('HTTP_USER_AGENT', ''),
+        'ref': request.META.get('HTTP_REFERER', '')[:500],
+    }
+    try:
+        cache._cache.rpush(event_key, json.dumps(event))
+    except (AttributeError, NotImplementedError):
+        pass
+
+
+def _handle_password_redirect(request, link):
+    """Muestra form de password y valida antes de redirigir."""
+    if request.method == 'POST' and request.POST.get('password'):
+        import hashlib as _hl
+        entered = _hl.sha256(request.POST.get('password', '').encode()).hexdigest()
+        if entered == link.password_hash:
+            if link.is_premium and link.seo_title:
+                return render(request, 'core/redirect_page.html', {'link': link})
+            return HttpResponseRedirect(link.original_url)
+        return render(request, 'core/password_protected.html', {
+            'link': link, 'error': 'Contraseña incorrecta.',
+        })
+    return render(request, 'core/password_protected.html', {'link': link})
+
+
+def qr_code(request, code):
+    """Genera QR code PNG o SVG para un link acortado."""
+    from django.http import Http404
+
+    link = ShortLink.objects.only('pk', 'short_code', 'owner').filter(short_code=code).first()
+    if not link:
+        raise Http404('Link no encontrado.')
+
+    fmt = request.GET.get('format', 'png')
+    short_url = request.build_absolute_uri(f'/s/{link.short_code}/')
+
+    import qrcode
+    import io as _io
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(short_url)
+    qr.make(fit=True)
+
+    if fmt == 'svg':
+        import qrcode.image.svg as svg_image
+        factory = svg_image.SvgImage
+        img = qrcode.make(short_url, image_factory=factory)
+        buf = _io.BytesIO()
+        img.save(buf)
+        return HttpResponse(buf.getvalue(), content_type='image/svg+xml')
+
+    img = qr.make_image(fill_color='black', back_color='white')
+    buf = _io.BytesIO()
+    img.save(buf, format='PNG')
+    return HttpResponse(buf.getvalue(), content_type='image/png')
 
 
 @acortador_login_required
@@ -457,6 +567,48 @@ def mis_links(request):
         'q': q,
         'page_obj': links_page,
     })
+
+
+@acortador_login_required
+def export_analytics(request):
+    """Exporta analytics de todos los links del usuario como CSV (premium only)."""
+    if not _is_premium(request.user):
+        return redirect('core:subscribir')
+
+    links = ShortLink.objects.filter(owner=request.user).order_by('-creado')
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="analytics.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        'short_code', 'short_url', 'original_url', 'clicks',
+        'mobile', 'desktop', 'tablet', 'bot', 'other',
+        'chrome', 'firefox', 'safari', 'edge', 'opera', 'other_browser',
+        'created_at', 'last_click',
+    ])
+
+    for link in links:
+        events = link.click_events.all()
+        device_counts = {'mobile': 0, 'desktop': 0, 'tablet': 0, 'bot': 0, 'other': 0}
+        browser_counts = {'Chrome': 0, 'Firefox': 0, 'Safari': 0, 'Edge': 0, 'Opera': 0, 'Other': 0}
+        for ev in events:
+            device_counts[ev.device] = device_counts.get(ev.device, 0) + 1
+            browser_counts[ev.browser] = browser_counts.get(ev.browser, 0) + 1
+
+        short_url = request.build_absolute_uri(f'/s/{link.short_code}/')
+        writer.writerow([
+            link.short_code, short_url, link.original_url, link.clicks,
+            device_counts['mobile'], device_counts['desktop'],
+            device_counts['tablet'], device_counts['bot'], device_counts['other'],
+            browser_counts['Chrome'], browser_counts['Firefox'],
+            browser_counts['Safari'], browser_counts['Edge'],
+            browser_counts['Opera'], browser_counts['Other'],
+            link.creado.isoformat() if link.creado else '',
+            link.ultimo_click.isoformat() if link.ultimo_click else '',
+        ])
+
+    return response
 
 
 @acortador_login_required
@@ -705,12 +857,17 @@ def editar_link(request, pk):
     """Edita un link del usuario.
 
     - Free: edita solo la URL original.
-    - Premium: edita URL + metadata SEO completa.
+    - Premium: edita URL + metadata SEO completa + password + redirect.
     """
     link = get_object_or_404(ShortLink, pk=pk, owner=request.user)
     is_premium = _is_premium(request.user)
     error = ''
     success = False
+
+    # User's active custom domains
+    user_domains = CustomDomain.objects.filter(
+        owner=request.user, status=CustomDomain.STATUS_ACTIVE,
+    ) if is_premium else []
 
     if request.method == 'POST':
         new_url = request.POST.get('original_url', '').strip()
@@ -726,25 +883,83 @@ def editar_link(request, pk):
             else:
                 link.original_url = new_url
 
+                # Custom domain assignment (premium only)
+                if is_premium:
+                    domain_pk = request.POST.get('custom_domain', '')
+                    if domain_pk:
+                        domain = user_domains.filter(pk=domain_pk).first()
+                        if domain:
+                            link.custom_domain = domain
+                        else:
+                            link.custom_domain = None
+                    else:
+                        link.custom_domain = None
+
                 if is_premium:
                     link.seo_title = request.POST.get('seo_title', '')[:120]
                     link.seo_description = request.POST.get('seo_description', '')[:300]
-                    link.seo_image = request.POST.get('seo_image', '')
+
+                    # OG image: upload file or use URL
+                    uploaded_image = request.FILES.get('seo_image_file')
+                    if uploaded_image:
+                        try:
+                            from PIL import Image as PILImage
+                            import os as _os
+
+                            img = PILImage.open(uploaded_image)
+                            if img.mode in ('RGBA', 'P'):
+                                img = img.convert('RGB')
+
+                            # Resize to max 1200x630 maintaining aspect ratio
+                            max_size = (1200, 630)
+                            img.thumbnail(max_size, PILImage.LANCZOS)
+
+                            # Save as WebP
+                            media_dir = settings.MEDIA_ROOT / 'og_images'
+                            media_dir.mkdir(parents=True, exist_ok=True)
+                            filename = f'og_{link.short_code}.webp'
+                            filepath = media_dir / filename
+                            img.save(filepath, 'WEBP', quality=82, method=6)
+
+                            link.seo_image = f'{settings.MEDIA_URL}og_images/{filename}'
+                        except Exception as e:
+                            logger.warning('OG image upload failed: %s', e)
+                            error = 'No se pudo procesar la imagen. Verificá que sea un archivo válido (JPG, PNG, WebP).'
+                    else:
+                        link.seo_image = request.POST.get('seo_image', '')
+
                     try:
                         link.redirect_seconds = max(0, min(30, int(request.POST.get('redirect_seconds', 5))))
                     except (ValueError, TypeError):
                         link.redirect_seconds = 5
                     link.needs_ping = True
 
-                link.save()
-                cache.delete(_redirect_cache_key(link.short_code))
-                success = True
+                    # Password protection
+                    password = request.POST.get('password', '').strip()
+                    if password:
+                        import hashlib as _hl
+                        link.password_hash = _hl.sha256(password.encode()).hexdigest()
+                    else:
+                        link.password_hash = ''
+
+                if not error:
+                    link.save()
+                    cache.delete(_redirect_cache_key(link.short_code))
+                    success = True
+
+    # Build short URL with custom domain if assigned
+    if link.custom_domain:
+        short_url = f'https://{link.custom_domain.domain}/s/{link.short_code}/'
+    else:
+        short_url = request.build_absolute_uri(f'/s/{link.short_code}/')
 
     return render(request, 'core/editar_link.html', {
         'link': link,
+        'short_url': short_url,
         'is_premium': is_premium,
         'error': error,
         'success': success,
+        'user_domains': user_domains,
     })
 
 
@@ -877,16 +1092,22 @@ def subscribir(request):
     """Página de subscripción — muestra planes y estado."""
     has_sub = hasattr(request.user, 'subscription')
     sub_status = request.user.subscription.status if has_sub else None
+    sub_plan = request.user.subscription.plan if has_sub else None
     checkout_status = request.GET.get('checkout', '')
     provider = _payment_provider()
-    mp_price = int(getattr(settings, 'MERCADOPAGO_PRICE', 2000))
+    plan_prices = getattr(settings, 'PLAN_PRICES', {})
     return render(request, 'core/subscribir.html', {
         'has_sub': has_sub,
         'sub_status': sub_status,
+        'sub_plan': sub_plan,
         'is_premium': _is_premium(request.user),
         'checkout_status': checkout_status,
         'payment_provider': provider,
-        'mp_price': f'{mp_price:,}',
+        'plan_prices': {
+            'starter': f'{plan_prices.get("starter", 4900):,}',
+            'pro': f'{plan_prices.get("pro", 9800):,}',
+            'business': f'{plan_prices.get("business", 28000):,}',
+        },
         'mp_public_key': getattr(settings, 'MERCADOPAGO_PUBLIC_KEY', ''),
         'stripe_publishable_key': getattr(settings, 'STRIPE_PUBLISHABLE_KEY', ''),
     })
@@ -898,6 +1119,10 @@ def checkout(request):
     if request.method != 'POST':
         return redirect('core:subscribir')
 
+    plan = request.POST.get('plan', 'starter')
+    if plan not in ('starter', 'pro', 'business'):
+        plan = 'starter'
+
     provider = _payment_provider()
 
     try:
@@ -907,10 +1132,10 @@ def checkout(request):
             return redirect(checkout_url)
 
         elif provider == 'mercadopago' and _mp_enabled():
-            checkout_url = mercadopago_service.create_preapproval(request.user)
+            checkout_url = mercadopago_service.create_preapproval(request.user, plan=plan)
             if checkout_url:
                 return redirect(checkout_url)
-            logger.error('MP checkout: URL vacía para user %s', request.user.pk)
+            logger.error('MP checkout: URL vacía para user %s plan %s', request.user.pk, plan)
             return redirect(f'{reverse("core:subscribir")}?checkout=error')
 
         else:
@@ -966,20 +1191,20 @@ def contacto_acortador(request):
         allowed, _ = rate_limit(f'contact:{ip}', limit=3, ttl=3600)
         if not allowed:
             return render(request, 'core/contacto.html', {
-                'form': ContactoAcortadorForm(),
+                'form': ContactoAcortalinkForm(),
                 'enviado': False,
                 'rate_limited': True,
                 'is_premium': request.user.is_authenticated and _is_premium(request.user),
             })
 
-        form = ContactoAcortadorForm(request.POST)
+        form = ContactoAcortalinkForm(request.POST)
         if form.is_valid():
             nombre = form.cleaned_data['nombre']
             email = form.cleaned_data['email']
             mensaje = form.cleaned_data['mensaje']
             if settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD:
                 send_mail(
-                    subject=f'[Acortador] Solicitud premium de {nombre}',
+                    subject=f'[Acortalink] Solicitud premium de {nombre}',
                     message=(
                         f'Nombre: {nombre}\n'
                         f'Email: {email}\n\n'
@@ -990,9 +1215,9 @@ def contacto_acortador(request):
                     fail_silently=True,
                 )
             enviado = True
-            form = ContactoAcortadorForm()
+            form = ContactoAcortalinkForm()
     else:
-        form = ContactoAcortadorForm()
+        form = ContactoAcortalinkForm()
 
     return render(request, 'core/contacto.html', {
         'form': form,
@@ -1111,7 +1336,7 @@ def perfil(request):
     user = request.user
     has_sub = hasattr(user, 'subscription')
     sub_status = user.subscription.status if has_sub else None
-
+    sub_plan = user.subscription.plan if has_sub else None
     email_updated = False
     password_changed = bool(request.GET.get('password_changed'))
     email_error = ''
@@ -1159,6 +1384,7 @@ def perfil(request):
     return render(request, 'core/perfil.html', {
         'has_sub': has_sub,
         'sub_status': sub_status,
+        'sub_plan': sub_plan,
         'is_premium': _is_premium(user),
         'email_updated': email_updated,
         'password_changed': password_changed,
@@ -1213,6 +1439,263 @@ def verificar_accion(request):
         'error': error,
         'resent': resent,
         'is_premium': _is_premium(request.user),
+    })
+
+
+# --- Custom Domains ---
+
+PLAN_DOMAIN_LIMITS = {
+    'starter': 1,
+    'pro': 10,
+    'business': 25,
+}
+
+
+@acortador_login_required
+def custom_domains(request):
+    """Gestión de dominios personalizados (premium only).
+
+    Two paths:
+    - BYOD: user brings their own domain, we verify CNAME
+    - Purchase: user searches, pays via MP, we register via registrar API
+    """
+    is_premium = _is_premium(request.user)
+    if not is_premium:
+        return redirect('core:subscribir')
+
+    from . import domain_service
+
+    sub = getattr(request.user, 'subscription', None)
+    plan = sub.plan if sub and sub.is_active else 'starter'
+    domain_limit = PLAN_DOMAIN_LIMITS.get(plan, 1)
+    domains = CustomDomain.objects.filter(owner=request.user).order_by('-creado')
+    for d in domains:
+        d.link_count = d.links.count()
+    error = ''
+    search_result = None
+    mp_checkout_url = None
+    verify_result = None
+
+    # Handle checkout redirect status
+    checkout_status = request.GET.get('checkout', '')
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+
+        if action == 'add':
+            # BYOD: add domain and set to pending
+            domain = request.POST.get('domain', '').strip().lower().lstrip('www.')
+            if not domain or '.' not in domain:
+                error = 'Ingresá un dominio válido (ej: mislinks.com).'
+            elif CustomDomain.objects.filter(owner=request.user, domain=domain).exists():
+                error = 'Ya tenés ese dominio configurado.'
+            elif domains.count() >= domain_limit:
+                error = f'Alcanzaste el límite de {domain_limit} dominios para tu plan.'
+            else:
+                CustomDomain.objects.create(
+                    owner=request.user, domain=domain,
+                    source=CustomDomain.SOURCE_BYOD,
+                )
+                return redirect('core:custom_domains')
+
+        elif action == 'verify':
+            # Verify DNS CNAME for a BYOD domain
+            pk = request.POST.get('pk', '')
+            cd = CustomDomain.objects.filter(pk=pk, owner=request.user).first()
+            if cd:
+                result = domain_service.verify_cname(cd.domain)
+                verify_result = result
+                if result['verified']:
+                    cd.status = CustomDomain.STATUS_ACTIVE
+                    cd.dns_verified_at = timezone.now()
+                    cd.save(update_fields=['status', 'dns_verified_at', 'actualizado'])
+                else:
+                    cd.status = CustomDomain.STATUS_FAILED
+                    cd.save(update_fields=['status', 'actualizado'])
+                return redirect('core:custom_domains')
+
+        elif action == 'search':
+            # Search domain availability for purchase
+            domain = request.POST.get('domain', '').strip().lower().lstrip('www.')
+            if not domain or '.' not in domain:
+                error = 'Ingresá un dominio válido (ej: mislinks.com).'
+            else:
+                search_result = domain_service.check_domain_availability(domain)
+                search_result['domain'] = domain
+
+        elif action == 'purchase':
+            # Initiate domain purchase via MP
+            domain = request.POST.get('domain', '').strip().lower().lstrip('www.')
+            if not domain:
+                error = 'Ingresá un dominio.'
+            elif domains.count() >= domain_limit:
+                error = f'Alcanzaste el límite de {domain_limit} dominios para tu plan.'
+            else:
+                try:
+                    mp_checkout_url = domain_service.create_domain_payment(request.user, domain)
+                    if mp_checkout_url:
+                        return HttpResponseRedirect(mp_checkout_url)
+                except RuntimeError as e:
+                    error = str(e)
+
+        elif action == 'delete':
+            pk = request.POST.get('pk', '')
+            CustomDomain.objects.filter(pk=pk, owner=request.user).delete()
+            return redirect('core:custom_domains')
+
+    return render(request, 'core/custom_domains.html', {
+        'domains': domains,
+        'domain_limit': domain_limit,
+        'domain_count': domains.count(),
+        'plan': plan,
+        'error': error,
+        'is_premium': is_premium,
+        'search_result': search_result,
+        'checkout_status': checkout_status,
+        'cname_target': getattr(settings, 'CNAME_TARGET', 'app.acortalink.com.ar'),
+        'domain_prices': getattr(settings, 'DOMAIN_PRICES', {}),
+    })
+
+
+# --- Team Members ---
+
+PLAN_TEAM_LIMITS = {
+    'business': 5,
+}
+
+
+@acortador_login_required
+def team_members(request):
+    """Gestión de miembros del team (Business only)."""
+    is_premium = _is_premium(request.user)
+    sub = getattr(request.user, 'subscription', None)
+    plan = sub.plan if sub and sub.is_active else 'starter'
+
+    if plan != 'business':
+        return redirect('core:subscribir')
+
+    team_limit = PLAN_TEAM_LIMITS.get(plan, 0)
+    members = TeamMember.objects.filter(team_owner=request.user).order_by('-invited_at')
+    error = ''
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        if action == 'invite':
+            username = request.POST.get('username', '').strip()
+            if not username:
+                error = 'Ingresá un nombre de usuario.'
+            elif username == request.user.username:
+                error = 'No podés invitarte a vos mismo.'
+            elif members.count() >= team_limit:
+                error = f'Alcanzaste el límite de {team_limit} miembros.'
+            else:
+                from django.contrib.auth.models import User
+                try:
+                    invitee = User.objects.get(username=username)
+                except User.DoesNotExist:
+                    error = 'Usuario no encontrado.'
+                else:
+                    if TeamMember.objects.filter(team_owner=request.user, user=invitee).exists():
+                        error = 'Ese usuario ya es miembro del team.'
+                    else:
+                        import secrets as _s
+                        token = _s.token_urlsafe(32)
+                        TeamMember.objects.create(
+                            team_owner=request.user,
+                            user=invitee,
+                            invite_token=token,
+                            accepted_at=timezone.now(),
+                        )
+                        return redirect('core:team_members')
+        elif action == 'remove':
+            pk = request.POST.get('pk', '')
+            TeamMember.objects.filter(pk=pk, team_owner=request.user).delete()
+            return redirect('core:team_members')
+
+    return render(request, 'core/team_members.html', {
+        'members': members,
+        'team_limit': team_limit,
+        'team_count': members.count(),
+        'error': error,
+        'is_premium': is_premium,
+    })
+
+
+# --- Webhooks ---
+
+@acortador_login_required
+def webhooks(request):
+    """Gestión de webhooks (Business only)."""
+    is_premium = _is_premium(request.user)
+    sub = getattr(request.user, 'subscription', None)
+    plan = sub.plan if sub and sub.is_active else 'starter'
+
+    if plan != 'business':
+        return redirect('core:subscribir')
+
+    hooks = Webhook.objects.filter(owner=request.user).order_by('-creado')
+    error = ''
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        if action == 'create':
+            url = request.POST.get('url', '').strip()
+            events = request.POST.get('events', 'link.created,link.deleted').strip()
+            if not url:
+                error = 'Ingresá una URL válida.'
+            elif not url.startswith(('http://', 'https://')):
+                error = 'La URL debe empezar con http:// o https://'
+            else:
+                secret = Webhook.generate_secret()
+                Webhook.objects.create(
+                    owner=request.user,
+                    url=url,
+                    events=events,
+                    secret=secret,
+                )
+                return redirect('core:webhooks')
+        elif action == 'delete':
+            pk = request.POST.get('pk', '')
+            Webhook.objects.filter(pk=pk, owner=request.user).delete()
+            return redirect('core:webhooks')
+
+    return render(request, 'core/webhooks.html', {
+        'webhooks': hooks,
+        'error': error,
+        'is_premium': is_premium,
+    })
+
+
+# --- API Keys UI ---
+
+@acortador_login_required
+def api_keys(request):
+    """Gestión de API keys (premium only)."""
+    is_premium = _is_premium(request.user)
+    if not is_premium:
+        return redirect('core:subscribir')
+
+    keys = ApiKey.objects.filter(user=request.user).order_by('-creado')
+    error = ''
+    new_key = None
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        if action == 'create':
+            name = request.POST.get('name', 'Default').strip()[:60]
+            key = ApiKey.generate_key()
+            ApiKey.objects.create(user=request.user, key=key, name=name)
+            new_key = key
+        elif action == 'deactivate':
+            pk = request.POST.get('pk', '')
+            ApiKey.objects.filter(pk=pk, user=request.user).update(active=False)
+            return redirect('core:api_keys')
+
+    return render(request, 'core/api_keys.html', {
+        'keys': keys,
+        'new_key': new_key,
+        'error': error,
+        'is_premium': is_premium,
     })
 
 

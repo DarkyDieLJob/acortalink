@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block meta_title %}Reportar link — Acortador | DieL{% endblock %}
+{% block meta_title %}Reportar link — Acortalink | DieL{% endblock %}
 {% block meta_description %}Reportá un link acortado por phishing, malware, spam o fraude.{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
@@ -10,7 +10,7 @@
     <h2 class="console-heading text-center mb-4">Reportar link</h2>
 
     <div class="alert alert-secondary mb-4">
-        <small class="text-muted">Link reportado:</small><br>
+        <small class="text-light">Link reportado:</small><br>
         <code>{{ link.short_code }}</code> → {{ link.original_url|truncatechars:60 }}
     </div>
 
@@ -27,11 +27,11 @@
     <div class="alert alert-danger">{{ error }}</div>
     {% endif %}
 
-    <div class="acortador-form">
+    <div class="acortalink-form">
         <form method="post">
             {% csrf_token %}
             <div class="mb-3">
-                <label class="form-label text-muted">Motivo del reporte</label>
+                <label class="form-label text-light">Motivo del reporte</label>
                 <select name="reason" class="form-select" required>
                     <option value="">Seleccioná un motivo...</option>
                     <option value="phishing">Phishing / Suplantación</option>
@@ -42,7 +42,7 @@
                 </select>
             </div>
             <div class="mb-3">
-                <label class="form-label text-muted">Detalle (opcional)</label>
+                <label class="form-label text-light">Detalle (opcional)</label>
                 <textarea name="detail" class="form-control" rows="3"
                           maxlength="500" placeholder="Describí brevemente el problema..."></textarea>
             </div>

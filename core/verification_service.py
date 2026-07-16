@@ -64,7 +64,7 @@ def create_activation_verification(user):
     activation_url = f"{_base_url()}/activar/{token}/"
 
     send_mail(
-        subject='Activá tu cuenta — Acortador DieL',
+        subject='Activá tu cuenta — Acortalink DieL',
         message=(
             f'Hola {user.username},\n\n'
             f'Activá tu cuenta en el acortador de links de DieL '

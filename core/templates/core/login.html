@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block meta_title %}Ingresar — Acortador de Links | DieL{% endblock %}
+{% block meta_title %}Ingresar — Acortalink de Links | DieL{% endblock %}
 {% block meta_description %}Ingresá a tu cuenta del acortador de links de DieL.{% endblock %}
 
 {% block acortador_content %}
@@ -14,23 +14,23 @@
     </div>
     {% endif %}
 
-    <div class="acortador-form">
+    <div class="acortalink-form">
         <form method="post">
             {% csrf_token %}
             {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
             <div class="mb-3">
-                <label class="form-label text-muted">Usuario</label>
+                <label class="form-label text-light">Usuario</label>
                 <input type="text" name="username" class="form-control" required autofocus>
             </div>
             <div class="mb-3">
-                <label class="form-label text-muted">Contraseña</label>
+                <label class="form-label text-light">Contraseña</label>
                 <input type="password" name="password" class="form-control" required>
             </div>
             <button type="submit" class="btn btn-acortar w-100">Ingresar</button>
         </form>
     </div>
 
-    <p class="text-center mt-3 text-muted">
+    <p class="text-center mt-3 text-light">
         ¿No tenés cuenta? <a href="{% url 'core:registro' %}">Registrarse gratis</a>
     </p>
 </div>

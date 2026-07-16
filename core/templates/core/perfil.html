@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block meta_title %}Mi perfil — Acortador | DieL{% endblock %}
+{% block meta_title %}Mi perfil — Acortalink | DieL{% endblock %}
 {% block meta_description %}Configuración de tu cuenta.{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
@@ -10,9 +10,9 @@
     <h2 class="console-heading mb-4">Mi perfil</h2>
 
     <!-- Info de cuenta -->
-    <div class="acortador-form mb-4">
+    <div class="acortalink-form mb-4">
         <h5 class="mb-3" style="color:#00ff41;">Cuenta</h5>
-        <div class="mb-2" style="font-size:0.85rem; color:#888;">
+        <div class="mb-2" style="font-size:0.85rem; color:#ddd;">
             Usuario: <span style="color:#fff;">{{ user.username }}</span>
         </div>
 
@@ -30,16 +30,16 @@
         <form method="post" class="mb-3">
             {% csrf_token %}
             <input type="hidden" name="action" value="update_email">
-            <label class="form-label text-muted" style="font-size:0.8rem;">Email</label>
+            <label class="form-label text-light" style="font-size:0.8rem;">Email</label>
             <input type="email" name="email" class="form-control mb-2"
                    value="{{ user.email }}" placeholder="tu@email.com"
-                   style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;">
+                   >
             <button type="submit" class="btn btn-sm btn-acortar">Guardar email</button>
         </form>
     </div>
 
     <!-- Cambiar contraseña -->
-    <div class="acortador-form mb-4">
+    <div class="acortalink-form mb-4">
         <h5 class="mb-3" style="color:#00ff41;">Contraseña</h5>
         {% if password_changed %}
         <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
@@ -52,30 +52,30 @@
         </div>
         {% endif %}
         {% if not user.email %}
-        <p style="color:#888; font-size:0.85rem;">
+        <p style="color:#ddd; font-size:0.85rem;">
             Necesitás configurar un email antes de cambiar tu contraseña.
         </p>
         {% else %}
-        <p style="color:#666; font-size:0.75rem; margin-bottom:1rem;">
+        <p style="color:#ddd; font-size:0.75rem; margin-bottom:1rem;">
             Al enviar el formulario te enviaremos un código de verificación a tu email para confirmar el cambio.
         </p>
         <form method="post">
             {% csrf_token %}
             <input type="hidden" name="action" value="request_password_change">
             <div class="mb-2">
-                <label class="form-label text-muted" style="font-size:0.8rem;">Contraseña actual</label>
+                <label class="form-label text-light" style="font-size:0.8rem;">Contraseña actual</label>
                 <input type="password" name="current_password" class="form-control"
-                       style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;" required>
+                        required>
             </div>
             <div class="mb-2">
-                <label class="form-label text-muted" style="font-size:0.8rem;">Nueva contraseña</label>
+                <label class="form-label text-light" style="font-size:0.8rem;">Nueva contraseña</label>
                 <input type="password" name="new_password1" class="form-control"
-                       style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;" required>
+                        required>
             </div>
             <div class="mb-3">
-                <label class="form-label text-muted" style="font-size:0.8rem;">Repetir nueva contraseña</label>
+                <label class="form-label text-light" style="font-size:0.8rem;">Repetir nueva contraseña</label>
                 <input type="password" name="new_password2" class="form-control"
-                       style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;" required>
+                        required>
             </div>
             <button type="submit" class="btn btn-sm btn-acortar">Cambiar contraseña</button>
         </form>
@@ -83,13 +83,13 @@
     </div>
 
     <!-- Subscripción -->
-    <div class="acortador-form mb-4">
+    <div class="acortalink-form mb-4">
         <h5 class="mb-3" style="color:#00ff41;">Subscripción</h5>
         {% if has_sub and sub_status == 'active' %}
         <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
-            <strong style="color:#00ff41;">✓ Activa</strong> — Premium
+            <strong style="color:#00ff41;">✓ Activa</strong> — Plan {{ sub_plan|default:"starter"|title }}
         </div>
-        <form method="post" action="{% url 'core:cancelar_sub' %}" onsubmit="return confirm('¿Seguro que querés cancelar tu subscripción premium?');">
+        <form method="post" action="{% url 'core:cancelar_sub' %}" onsubmit="return confirm('¿Seguro que querés cancelar tu subscripción?');">
             {% csrf_token %}
             <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="border-color:#dc3545;color:#dc3545;">Cancelar subscripción</button>
         </form>
@@ -104,12 +104,35 @@
         </div>
         <a href="{% url 'core:subscribir' %}" class="btn btn-sm btn-acortar w-100">Completar pago</a>
         {% else %}
-        <div style="background:#0d0d0d; border:1px solid #333; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#888; font-size:0.85rem;">
+        <div style="background:#0d0d0d; border:1px solid #555; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#ddd; font-size:0.85rem;">
             Sin subscripción
         </div>
         <a href="{% url 'core:subscribir' %}" class="btn btn-sm btn-acortar w-100">Subscribirse</a>
         {% endif %}
     </div>
+
+    {% if is_premium %}
+    <!-- Features premium -->
+    <div class="acortalink-form mb-4">
+        <h5 class="mb-3" style="color:#00ff41;">Herramientas premium</h5>
+        <div class="d-flex flex-column gap-2" style="font-size:0.85rem;">
+            <a href="{% url 'core:custom_domains' %}" class="console-link" style="text-decoration:none; padding:0.5rem 0.75rem; background:#0a0a0a; border:1px solid #333; border-radius:6px;">
+                🌐 Dominios personalizados
+            </a>
+            <a href="{% url 'core:api_keys' %}" class="console-link" style="text-decoration:none; padding:0.5rem 0.75rem; background:#0a0a0a; border:1px solid #333; border-radius:6px;">
+                🔑 API Keys
+            </a>
+            {% if sub_plan == 'business' %}
+            <a href="{% url 'core:team_members' %}" class="console-link" style="text-decoration:none; padding:0.5rem 0.75rem; background:#0a0a0a; border:1px solid #333; border-radius:6px;">
+                👥 Miembros del team
+            </a>
+            <a href="{% url 'core:webhooks' %}" class="console-link" style="text-decoration:none; padding:0.5rem 0.75rem; background:#0a0a0a; border:1px solid #333; border-radius:6px;">
+                🔔 Webhooks
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 
     <div class="mt-3 text-center">
         <a href="{% url 'core:index' %}" class="console-link">← Volver al acortador</a>

@@ -4,35 +4,35 @@
 
 <h2 class="console-heading mb-4">Editar SEO del link</h2>
 
-<div class="acortador-form">
+<div class="acortalink-form">
     <div class="mb-4">
-        <p class="text-muted mb-1">Link:</p>
+        <p class="text-light mb-1">Link:</p>
         <p class="short-code" style="font-size:1.2rem;">/s/{{ link.short_code }}/</p>
-        <p class="text-muted" style="font-size:0.85rem;">→ {{ link.original_url }}</p>
+        <p class="text-light" style="font-size:0.85rem;">→ {{ link.original_url }}</p>
     </div>
 
     <form method="post">
         {% csrf_token %}
         <div class="mb-3">
-            <label class="form-label text-muted">Título SEO <small>(max 120)</small></label>
+            <label class="form-label text-light">Título SEO <small>(max 120)</small></label>
             <input type="text" name="seo_title" class="form-control" value="{{ link.seo_title }}"
                    maxlength="120" placeholder="Título que aparecerá en Google y redes sociales">
         </div>
         <div class="mb-3">
-            <label class="form-label text-muted">Descripción SEO <small>(max 300)</small></label>
+            <label class="form-label text-light">Descripción SEO <small>(max 300)</small></label>
             <textarea name="seo_description" class="form-control" rows="3" maxlength="300"
                       placeholder="Descripción que Google mostrará en resultados de búsqueda">{{ link.seo_description }}</textarea>
         </div>
         <div class="mb-3">
-            <label class="form-label text-muted">Imagen OG (URL) <small>opcional</small></label>
+            <label class="form-label text-light">Imagen OG (URL) <small>opcional</small></label>
             <input type="text" name="seo_image" class="form-control" value="{{ link.seo_image }}"
                    placeholder="https://ejemplo.com/imagen.jpg">
         </div>
         <div class="mb-3">
-            <label class="form-label text-muted">Segundos antes de redirect <small>(0 = instantáneo)</small></label>
+            <label class="form-label text-light">Segundos antes de redirect <small>(0 = instantáneo)</small></label>
             <input type="number" name="redirect_seconds" class="form-control" value="{{ link.redirect_seconds }}"
                    min="0" max="30" style="max-width:100px;">
-            <small class="text-muted">Si es 0, la página indexa pero redirige sin countdown.</small>
+            <small class="text-light">Si es 0, la página indexa pero redirige sin countdown.</small>
         </div>
         <div class="d-flex gap-2 mt-4">
             <button type="submit" class="btn btn-acortar">Guardar</button>

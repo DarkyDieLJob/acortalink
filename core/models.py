@@ -43,10 +43,10 @@ class EmailVerification(models.Model):
 
 
 class Subscription(models.Model):
-    """Subscripción premium del usuario.
+    """Subscripción del usuario.
 
-    Integrada con Stripe. ``provider_id`` guarda el Stripe subscription ID,
-    ``stripe_customer_id`` guarda el Stripe customer ID.
+    Integrada con MercadoPago o Stripe. ``provider_id`` guarda el ID de
+    la subscripción en el provider, ``stripe_customer_id`` guarda el customer ID.
     """
 
     STATUS_PENDING = 'pending'
@@ -61,9 +61,26 @@ class Subscription(models.Model):
         (STATUS_EXPIRED, 'Expirada'),
     ]
 
+    PLAN_STARTER = 'starter'
+    PLAN_PRO = 'pro'
+    PLAN_BUSINESS = 'business'
+
+    PLAN_CHOICES = [
+        (PLAN_STARTER, 'Starter'),
+        (PLAN_PRO, 'Pro'),
+        (PLAN_BUSINESS, 'Business'),
+    ]
+
+    PLAN_LINK_LIMITS = {
+        PLAN_STARTER: 3000,
+        PLAN_PRO: 10000,
+        PLAN_BUSINESS: 50000,
+    }
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='subscription')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
-    provider = models.CharField(max_length=30, default='stripe')
+    plan = models.CharField(max_length=20, choices=PLAN_CHOICES, default=PLAN_STARTER)
+    provider = models.CharField(max_length=30, default='mercadopago')
     provider_id = models.CharField(max_length=100, blank=True, default='')
     stripe_customer_id = models.CharField(max_length=100, blank=True, default='')
     fecha_inicio = models.DateTimeField(null=True, blank=True)
@@ -100,6 +117,15 @@ class ShortLink(models.Model):
     seo_updated_at = models.DateTimeField(null=True, blank=True)
     has_seo = models.BooleanField(default=False, db_index=True)
     needs_ping = models.BooleanField(default=False, db_index=True)
+
+    # Password protection (premium)
+    password_hash = models.CharField(max_length=128, blank=True, default='')
+
+    # Custom domain (premium, nullable)
+    custom_domain = models.ForeignKey(
+        'CustomDomain', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='links', default=None,
+    )
 
     # Stats
     clicks = models.PositiveIntegerField(default=0)
@@ -165,3 +191,200 @@ class LinkReport(models.Model):
 
     def __str__(self):
         return f'Reporte de {self.link.short_code} — {self.get_reason_display()}'
+
+
+class ClickEvent(models.Model):
+    """Evento individual de click para analytics geo/device/referrer.
+
+    Se crea de forma asíncrona (batch) desde Redis en flush_clicks.
+    """
+
+    DEVICE_MOBILE = 'mobile'
+    DEVICE_DESKTOP = 'desktop'
+    DEVICE_TABLET = 'tablet'
+    DEVICE_BOT = 'bot'
+    DEVICE_OTHER = 'other'
+
+    DEVICE_CHOICES = [
+        (DEVICE_MOBILE, 'Mobile'),
+        (DEVICE_DESKTOP, 'Desktop'),
+        (DEVICE_TABLET, 'Tablet'),
+        (DEVICE_BOT, 'Bot'),
+        (DEVICE_OTHER, 'Other'),
+    ]
+
+    link = models.ForeignKey(ShortLink, on_delete=models.CASCADE, related_name='click_events')
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    country = models.CharField(max_length=2, blank=True, default='')
+    device = models.CharField(max_length=10, choices=DEVICE_CHOICES, default=DEVICE_OTHER)
+    browser = models.CharField(max_length=50, blank=True, default='')
+    referrer = models.URLField(max_length=500, blank=True, default='')
+    creado = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-creado']
+        indexes = [
+            models.Index(fields=['link', '-creado'], name='idx_clickevent_link'),
+        ]
+        verbose_name = 'Evento de click'
+        verbose_name_plural = 'Eventos de click'
+
+    def __str__(self):
+        return f'Click {self.link.short_code} — {self.get_device_display()}'
+
+
+class ApiKey(models.Model):
+    """API key para acceso REST API por usuario."""
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='api_keys')
+    key = models.CharField(max_length=64, unique=True, db_index=True)
+    name = models.CharField(max_length=60, default='Default')
+    active = models.BooleanField(default=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    ultimo_uso = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-creado']
+        verbose_name = 'API Key'
+        verbose_name_plural = 'API Keys'
+
+    def __str__(self):
+        return f'{self.user.username} — {self.name}'
+
+    @staticmethod
+    def generate_key():
+        import secrets as _secrets
+        return _secrets.token_urlsafe(32)
+
+
+class CustomDomain(models.Model):
+    """Dominio personalizado configurado por el usuario (premium).
+
+    El usuario apunta un CNAME a nuestro servidor y nosotros servimos
+    los links desde ese dominio. Caddy se encarga del SSL automático.
+    """
+
+    STATUS_PENDING = 'pending'
+    STATUS_ACTIVE = 'active'
+    STATUS_FAILED = 'failed'
+
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Pendiente (DNS no verificado)'),
+        (STATUS_ACTIVE, 'Activo'),
+        (STATUS_FAILED, 'Fallido (DNS incorrecto)'),
+    ]
+
+    SOURCE_BYOD = 'byod'
+    SOURCE_PURCHASED = 'purchased'
+
+    SOURCE_CHOICES = [
+        (SOURCE_BYOD, 'Dominio propio'),
+        (SOURCE_PURCHASED, 'Comprado via plataforma'),
+    ]
+
+    PURCHASE_PENDING = 'purchase_pending'
+    PURCHASE_PAID = 'purchase_paid'
+    PURCHASE_REGISTERED = 'purchase_registered'
+    PURCHASE_FAILED = 'purchase_failed'
+
+    PURCHASE_CHOICES = [
+        (PURCHASE_PENDING, 'Pago pendiente'),
+        (PURCHASE_PAID, 'Pagado, registrando'),
+        (PURCHASE_REGISTERED, 'Registrado'),
+        (PURCHASE_FAILED, 'Fallo en registro'),
+    ]
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='custom_domains')
+    domain = models.CharField(max_length=253, unique=True, db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default=SOURCE_BYOD)
+    purchase_status = models.CharField(max_length=25, choices=PURCHASE_CHOICES, blank=True, default='')
+    price = models.PositiveIntegerField(default=0)
+    mp_payment_id = models.CharField(max_length=64, blank=True, default='')
+    dns_verified_at = models.DateTimeField(null=True, blank=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    actualizado = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-creado']
+        verbose_name = 'Dominio personalizado'
+        verbose_name_plural = 'Dominios personalizados'
+
+    def __str__(self):
+        return f'{self.domain} ({self.get_status_display()})'
+
+
+class TeamMember(models.Model):
+    """Miembro de un team (Business plan).
+
+    El owner del Business plan puede invitar hasta 5 usuarios para
+    compartir links y analytics.
+    """
+
+    ROLE_ADMIN = 'admin'
+    ROLE_MEMBER = 'member'
+
+    ROLE_CHOICES = [
+        (ROLE_ADMIN, 'Admin'),
+        (ROLE_MEMBER, 'Member'),
+    ]
+
+    team_owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='team_members')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='team_memberships')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default=ROLE_MEMBER)
+    invite_token = models.CharField(max_length=64, blank=True, default='')
+    invited_at = models.DateTimeField(auto_now_add=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-invited_at']
+        unique_together = ['team_owner', 'user']
+        verbose_name = 'Miembro del team'
+        verbose_name_plural = 'Miembros del team'
+
+    def __str__(self):
+        return f'{self.team_owner.username} → {self.user.username} ({self.get_role_display()})'
+
+
+class Webhook(models.Model):
+    """Webhook endpoint para eventos de API (Business plan).
+
+    Cuando un link recibe clicks o es creado, se envía un POST
+    al URL configurado con el evento firmado.
+    """
+
+    EVENT_CLICK = 'click'
+    EVENT_LINK_CREATED = 'link.created'
+    EVENT_LINK_DELETED = 'link.deleted'
+
+    EVENT_CHOICES = [
+        (EVENT_CLICK, 'Click recibido'),
+        (EVENT_LINK_CREATED, 'Link creado'),
+        (EVENT_LINK_DELETED, 'Link eliminado'),
+    ]
+
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='webhooks')
+    url = models.URLField(max_length=500)
+    events = models.CharField(max_length=200, default='link.created,link.deleted')
+    secret = models.CharField(max_length=64, blank=True, default='')
+    active = models.BooleanField(default=True)
+    creado = models.DateTimeField(auto_now_add=True)
+    ultimo_envio = models.DateTimeField(null=True, blank=True)
+    fallos_consecutivos = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['-creado']
+        verbose_name = 'Webhook'
+        verbose_name_plural = 'Webhooks'
+
+    def __str__(self):
+        return f'{self.owner.username} → {self.url}'
+
+    @staticmethod
+    def generate_secret():
+        import secrets as _secrets
+        return _secrets.token_urlsafe(32)
+
+    def event_list(self):
+        return [e.strip() for e in self.events.split(',') if e.strip()]

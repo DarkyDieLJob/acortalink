@@ -2,15 +2,15 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: ${DB_NAME:-acortador}
-      POSTGRES_USER: ${DB_USER:-acortador}
+      POSTGRES_DB: ${DB_NAME:-acortalink}
+      POSTGRES_USER: ${DB_USER:-acortalink}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5433:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-acortador} -d ${DB_NAME:-acortador}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-acortalink} -d ${DB_NAME:-acortalink}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -18,7 +18,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "6380:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -28,7 +28,7 @@ services:
   web:
     build: .
     ports:
-      - "8000:8000"
+      - "8001:8000"
     volumes:
       - .:/app
     env_file:
@@ -46,7 +46,8 @@ services:
       redis:
         condition: service_healthy
     command: >
-      sh -c "python manage.py migrate --noinput &&
+      sh -c "uv sync --frozen --no-dev &&
+             python manage.py migrate --noinput &&
              python manage.py collectstatic --noinput &&
              gunicorn -c gunicorn.conf.py acortador_project.wsgi:application"
 
@@ -71,8 +72,10 @@ services:
       redis:
         condition: service_healthy
     command: >
-      sh -c "printf '0 3 * * * cd /app && python manage.py cleanup_expired_links >> /var/log/cron_cleanup.log 2>&1\n*/30 * * * * cd /app && python manage.py ping_seo >> /var/log/cron_ping.log 2>&1\n*/5 * * * * cd /app && python manage.py flush_clicks >> /var/log/cron_flush.log 2>&1\n' | crontab - &&
-             crond -f -l 2"
+      sh -c "uv sync --frozen --no-dev &&
+             printf '0 3 * * * cd /app && python manage.py cleanup_expired_links >> /var/log/cron_cleanup.log 2>&1\\n*/30 * * * * cd /app && python manage.py ping_seo >> /var/log/cron_ping.log 2>&1\\n*/5 * * * * cd /app && python manage.py flush_clicks >> /var/log/cron_flush.log 2>&1\\n' > /tmp/crontab.txt &&
+             crontab /tmp/crontab.txt &&
+             cron -f -L 2"
 
 volumes:
   pgdata:

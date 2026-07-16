@@ -1,6 +1,6 @@
-# Acortador de Links
+# Acortalink de Links
 
-Acortador de URLs standalone en Django. Optimizado para 750 usuarios concurrentes.
+Acortalink de URLs standalone en Django. Optimizado para 750 usuarios concurrentes.
 
 ## Features
 

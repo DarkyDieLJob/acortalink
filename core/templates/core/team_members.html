@@ -1,0 +1,90 @@
+{% extends "core/base.html" %}
+
+{% block meta_title %}Team — Acortalink | DieL{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block acortador_content %}
+
+<div style="max-width:680px; margin:0 auto;">
+    <h2 class="console-heading mb-4">Miembros del team</h2>
+
+    <p style="color:#ddd; font-size:0.85rem; margin-bottom:1.5rem;">
+        Invitá usuarios a tu team para compartir links y analytics.
+        Plan <strong style="color:#ff9900;">Business</strong> —
+        {{ team_count }}/{{ team_limit }} miembros
+    </p>
+
+    {% if error %}
+    <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+        <strong style="color:#dc3545;">{{ error }}</strong>
+    </div>
+    {% endif %}
+
+    <!-- Invitar miembro -->
+    {% if team_count < team_limit %}
+    <div class="acortalink-form mb-4">
+        <h5 class="mb-3" style="color:#00ff41;">Invitar miembro</h5>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="invite">
+            <label class="form-label text-light" style="font-size:0.8rem;">Nombre de usuario</label>
+            <input type="text" name="username" class="form-control mb-2"
+                   placeholder="usuario"
+                   required>
+            <small class="text-light" style="font-size:0.72rem; display:block; margin-bottom:0.75rem;">
+                El usuario debe estar registrado en la plataforma.
+            </small>
+            <button type="submit" class="btn btn-sm btn-acortar">Invitar</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Lista de miembros -->
+    {% if members %}
+    <div class="acortalink-form">
+        <h5 class="mb-3" style="color:#00ff41;">Miembros actuales</h5>
+        <div class="table-responsive">
+            <table class="table links-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Rol</th>
+                        <th>Invitado</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in members %}
+                    <tr>
+                        <td style="color:#00ff41; font-weight:700;">{{ m.user.username }}</td>
+                        <td>
+                            {% if m.role == 'admin' %}
+                                <span style="color:#00ccff;">Admin</span>
+                            {% else %}
+                                Member
+                            {% endif %}
+                        </td>
+                        <td style="font-size:0.75rem;">{{ m.invited_at|date:"d/m/Y" }}</td>
+                        <td>
+                            <form method="post" style="display:inline;"
+                                  onsubmit="return confirm('¿Eliminar a {{ m.user.username }} del team?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="remove">
+                                <input type="hidden" name="pk" value="{{ m.pk }}">
+                                <button type="submit" style="color:#dc3545; background:none; border:none; cursor:pointer; font-size:0.8rem;">Eliminar</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="mt-4 text-center">
+        <a href="{% url 'core:perfil' %}" class="console-link">← Volver al perfil</a>
+    </div>
+</div>
+
+{% endblock %}

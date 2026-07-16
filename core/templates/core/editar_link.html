@@ -1,97 +1,359 @@
 {% extends "core/base.html" %}
 
-{% block meta_title %}Editar link — Acortador | DieL{% endblock %}
+{% block meta_title %}Editar link — Acortalink | DieL{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
 {% block acortador_content %}
 
-<div style="max-width:560px; margin:0 auto;">
-    <h2 class="console-heading mb-4">Editar link</h2>
+<div style="max-width:820px; margin:0 auto;">
+    <h2 class="console-heading mb-3">Editar link</h2>
 
-    <div class="acortador-form mb-4">
-        <div class="mb-3">
-            <p class="text-muted mb-1" style="font-size:0.8rem;">Código:</p>
-            <p class="short-code" style="font-size:1.2rem;">/s/{{ link.short_code }}/</p>
+    <!-- Short URL display -->
+    <div class="acortalink-form mb-3" style="padding:1rem 1.5rem;">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <p class="text-light mb-0" style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em;">Tu link acortado</p>
+                <p class="mb-0" style="font-size:1.1rem;">
+                    <span class="short-code">{{ short_url }}</span>
+                </p>
+            </div>
+            <button class="btn btn-sm btn-acortar" onclick="navigator.clipboard.writeText('{{ short_url }}'); showToast('Link copiado');">
+                Copiar link
+            </button>
         </div>
-
-        {% if success %}
-        <div style="background:#0d0d0d; border:1px solid #00ff41; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
-            <strong style="color:#00ff41;">✓ Link actualizado correctamente.</strong>
-            {% if is_premium %}
-            <br><span style="color:#888; font-size:0.78rem;">Los cambios de SEO están en cola para indexación. El ping a buscadores se envía automáticamente cada 30 minutos.</span>
-            {% endif %}
-        </div>
-        {% endif %}
-        {% if error %}
-        <div style="background:#0d0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
-            <strong style="color:#dc3545;">{{ error }}</strong>
-        </div>
-        {% endif %}
-
-        <form method="post">
-            {% csrf_token %}
-            <!-- URL original (free + premium) -->
-            <div class="mb-3">
-                <label class="form-label text-muted" style="font-size:0.8rem;">URL original</label>
-                <input type="url" name="original_url" class="form-control" value="{{ link.original_url }}"
-                       placeholder="https://ejemplo.com"
-                       style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;" required>
-            </div>
-
-            {% if is_premium %}
-            <!-- SEO fields (premium only) -->
-            <hr style="border-color:#222; margin:1.5rem 0;">
-            <h5 class="mb-3" style="color:#00ff41; font-size:0.9rem;">Configuración SEO</h5>
-
-            <div style="background:#0a0a0a; border:1px solid #ffc107; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1.25rem; color:#aaa; font-size:0.78rem;">
-                <strong style="color:#ffc107;">⚠ Indexación no instantánea</strong><br>
-                Los cambios de SEO tardan en reflejarse. Los buscadores (Google, Bing) tienen sus propias cachés
-                y pueden tardar desde horas hasta días en volver a rastrear tu página. Nosotros enviamos un
-                ping automático a los buscadores cada 30 minutos para acelerar el proceso, pero no garantiza
-                indexación inmediata.
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label text-muted" style="font-size:0.8rem;">Título SEO <small>(max 120)</small></label>
-                <input type="text" name="seo_title" class="form-control" value="{{ link.seo_title }}"
-                       maxlength="120" placeholder="Título para Google y redes sociales"
-                       style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;">
-                <small class="text-muted" style="font-size:0.72rem;">Aparece como título en resultados de Google y como título cuando compartís el link en redes sociales.</small>
-            </div>
-            <div class="mb-3">
-                <label class="form-label text-muted" style="font-size:0.8rem;">Descripción SEO <small>(max 300)</small></label>
-                <textarea name="seo_description" class="form-control" rows="3" maxlength="300"
-                          placeholder="Descripción que Google mostrará en resultados"
-                          style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;">{{ link.seo_description }}</textarea>
-                <small class="text-muted" style="font-size:0.72rem;">Texto descriptivo bajo el título en Google. También lo usan Facebook, LinkedIn y WhatsApp como vista previa.</small>
-            </div>
-            <div class="mb-3">
-                <label class="form-label text-muted" style="font-size:0.8rem;" title="La imagen OG (Open Graph) es la miniatura que aparece cuando compartís el link en WhatsApp, Facebook, LinkedIn, Telegram, etc. Debe ser una URL pública directa a una imagen (JPG, PNG o WebP). Tamaño recomendado: 1200x630px. Si la dejás vacía, las redes sociales elegirán una imagen automáticamente o no mostrarán ninguna.">Imagen OG (URL) <small>opcional</small> <span style="color:#555; cursor:help;">ⓘ</span></label>
-                <input type="text" name="seo_image" class="form-control" value="{{ link.seo_image }}"
-                       placeholder="https://ejemplo.com/imagen.jpg"
-                       style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;">
-                <small class="text-muted" style="font-size:0.72rem;">Miniatura que aparece al compartir el link en WhatsApp, Facebook, LinkedIn, etc. URL directa a una imagen (JPG/PNG/WebP). Recomendado: 1200×630px.</small>
-            </div>
-            <div class="mb-3">
-                <label class="form-label text-muted" style="font-size:0.8rem;">Segundos antes de redirect <small>(0 = instantáneo)</small></label>
-                <input type="number" name="redirect_seconds" class="form-control" value="{{ link.redirect_seconds }}"
-                       min="0" max="30" style="max-width:100px; background:#0a0a0a; border:1px solid #333; color:#fff; font-size:0.9rem;">
-                <small class="text-muted" style="font-size:0.72rem;">Si es 0, la página indexa pero redirige sin countdown. Con segundos, el visitante ve tu SEO antes de ser redirigido.</small>
-            </div>
-            {% else %}
-            <div style="background:#0a0a0a; border:1px solid #222; border-radius:8px; padding:0.75rem 1rem; margin-top:1.5rem; color:#666; font-size:0.8rem;">
-                <strong style="color:#888;">SEO no disponible</strong> — 
-                <a href="{% url 'core:subscribir' %}" style="color:#00ff41;">Subscribite premium</a> 
-                para editar metadata SEO, imagen OG y tiempo de redirect.
-            </div>
-            {% endif %}
-
-            <div class="d-flex gap-2 mt-4">
-                <button type="submit" class="btn btn-acortar">Guardar cambios</button>
-                <a href="{% url 'core:mis_links' %}" class="btn btn-outline-light" style="border-color:#333;color:#666;">Cancelar</a>
-            </div>
-        </form>
     </div>
+
+    {% if success %}
+    <div style="background:#0d1a0d; border:1px solid #00ff41; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+        <strong style="color:#00ff41;">✓ Link actualizado correctamente.</strong>
+        {% if is_premium %}
+        <br><span style="color:#ddd; font-size:0.78rem;">Los cambios de SEO están en cola para indexación. El ping a buscadores se envía automáticamente cada 30 minutos.</span>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% if error %}
+    <div style="background:#1a0d0d; border:1px solid #dc3545; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
+        <strong style="color:#dc3545;">{{ error }}</strong>
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="edit-link-form">
+        {% csrf_token %}
+
+        <!-- Tab navigation -->
+        <div class="edit-tabs mb-3">
+            <button type="button" class="edit-tab active" data-tab="link">🔗 Link</button>
+            {% if is_premium %}
+            <button type="button" class="edit-tab" data-tab="seo">🔍 SEO</button>
+            <button type="button" class="edit-tab" data-tab="redirect">⏱ Redirect</button>
+            <button type="button" class="edit-tab" data-tab="password">🔒 Contraseña</button>
+            <button type="button" class="edit-tab" data-tab="qr">📱 QR</button>
+            {% endif %}
+        </div>
+
+        <!-- Tab: Link (free + premium) -->
+        <div class="edit-panel active" data-panel="link">
+            <div class="acortalink-form">
+                <h5 class="mb-3" style="color:#00ff41;">Link</h5>
+                <p style="color:#ddd; font-size:0.8rem; margin-bottom:1rem;">
+                    Editá la URL de destino. Cuando alguien visite tu link acortado, será redirigido a esta dirección.
+                </p>
+                <div class="mb-3">
+                    <label class="form-label text-light" style="font-size:0.8rem;">URL de destino</label>
+                    <input type="url" name="original_url" class="form-control" value="{{ link.original_url }}"
+                           placeholder="https://ejemplo.com" required>
+                    <small class="text-light" style="font-size:0.72rem;">La página a la que apunta tu link acortado.</small>
+                </div>
+
+                {% if is_premium and user_domains %}
+                <div class="mb-3">
+                    <label class="form-label text-light" style="font-size:0.8rem;">Dominio del link</label>
+                    <select name="custom_domain" class="form-select" style="background:#0a0a0a; border:1px solid #555; color:#fff; font-size:0.95rem;">
+                        <option value="">Dominio por defecto ({{ request.get_host }})</option>
+                        {% for d in user_domains %}
+                        <option value="{{ d.pk }}" {% if link.custom_domain_id == d.pk %}selected{% endif %}>
+                            {{ d.domain }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-light" style="font-size:0.72rem;">
+                        Seleccioná en qué dominio se sirve este link.
+                        <a href="{% url 'core:custom_domains' %}" style="color:#00ff41;">Gestionar dominios</a>
+                    </small>
+                </div>
+                {% elif is_premium and not user_domains %}
+                <div class="mb-3">
+                    <label class="form-label text-light" style="font-size:0.8rem;">Dominio del link</label>
+                    <div style="background:#0a0a0a; border:1px solid #333; border-radius:6px; padding:0.6rem 0.8rem; color:#ddd; font-size:0.8rem;">
+                        Usando dominio por defecto.
+                        <a href="{% url 'core:custom_domains' %}" style="color:#00ff41;">Configurar dominio personalizado →</a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="mb-0" style="font-size:0.78rem; color:#ddd;">
+                    <strong>Clicks:</strong> {{ link.clicks }} &nbsp;|&nbsp;
+                    <strong>Creado:</strong> {{ link.creado|date:"d/m/Y" }}
+                </div>
+            </div>
+        </div>
+
+        {% if is_premium %}
+        <!-- Tab: SEO (premium only) -->
+        <div class="edit-panel" data-panel="seo">
+            <div class="acortalink-form mb-3">
+                <h5 class="mb-3" style="color:#00ff41;">Configuración SEO</h5>
+                <p style="color:#ddd; font-size:0.8rem; margin-bottom:1rem;">
+                    Configurá cómo se ve tu link en Google y en redes sociales cuando alguien lo comparte.
+                </p>
+
+                <div style="background:#0a0a0a; border:1px solid #ffc107; border-radius:8px; padding:0.6rem 0.9rem; margin-bottom:1.25rem; color:#ddd; font-size:0.75rem;">
+                    <strong style="color:#ffc107;">⚠ Indexación no instantánea</strong> —
+                    Los buscadores pueden tardar horas o días en reflejar los cambios. Enviamos un ping automático cada 30 min.
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-light" style="font-size:0.8rem;">Título SEO <small>(max 120)</small></label>
+                    <input type="text" name="seo_title" id="seo_title" class="form-control" value="{{ link.seo_title }}"
+                           maxlength="120" placeholder="Título para Google y redes sociales">
+                    <small class="text-light" style="font-size:0.72rem;">Aparece como título azul en Google y como título cuando compartís el link.</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-light" style="font-size:0.8rem;">Descripción SEO <small>(max 300)</small></label>
+                    <textarea name="seo_description" id="seo_description" class="form-control" rows="3" maxlength="300"
+                              placeholder="Descripción que Google mostrará en resultados">{{ link.seo_description }}</textarea>
+                    <small class="text-light" style="font-size:0.72rem;">Texto gris bajo el título en Google. También lo usan Facebook, LinkedIn y WhatsApp.</small>
+                </div>
+
+                <!-- OG Image: upload or URL -->
+                <div class="mb-3">
+                    <label class="form-label text-light" style="font-size:0.8rem;">Imagen de vista previa (OG)</label>
+                    <div class="mb-2">
+                        <div class="d-flex gap-2 mb-2">
+                            <button type="button" class="btn btn-sm btn-outline-light active" id="og_upload_btn"
+                                    style="border-color:#00ff41; color:#00ff41; font-size:0.75rem;"
+                                    onclick="document.getElementById('og_image_file').click();">
+                                Subir imagen
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-light" id="og_url_btn"
+                                    style="border-color:#555; color:#ddd; font-size:0.75rem;"
+                                    onclick="document.getElementById('og_image_url_wrap').style.display='block'; document.getElementById('og_upload_btn').style.display='none'; this.style.display='none';">
+                                Usar URL en su lugar
+                            </button>
+                        </div>
+                        <input type="file" name="seo_image_file" id="og_image_file" accept="image/jpeg,image/png,image/webp,image/gif"
+                               style="display:none;" onchange="document.getElementById('og_file_name').textContent = this.files[0] ? this.files[0].name : ''; document.getElementById('og_file_info').style.display='block';">
+                        <div id="og_file_info" style="display:none; font-size:0.75rem; color:#00ff41; margin-top:0.25rem;">
+                            <span id="og_file_name"></span> — se convertirá a WebP automáticamente
+                        </div>
+                        <div id="og_image_url_wrap" style="display:none;">
+                            <input type="text" name="seo_image" class="form-control" value="{{ link.seo_image }}"
+                                   placeholder="https://ejemplo.com/imagen.jpg">
+                            <small class="text-light" style="font-size:0.72rem;">URL directa a una imagen pública (JPG/PNG/WebP).</small>
+                        </div>
+                    </div>
+                    {% if link.seo_image %}
+                    <div style="margin-top:0.5rem;">
+                        <img src="{{ link.seo_image }}" alt="OG actual" style="max-width:200px; max-height:105px; border:1px solid #555; border-radius:6px;">
+                        <small class="text-light d-block" style="font-size:0.7rem;">Imagen actual. Subí una nueva para reemplazarla.</small>
+                    </div>
+                    {% endif %}
+                    <small class="text-light" style="font-size:0.72rem; display:block; margin-top:0.25rem;">
+                        Recomendado: 1200×630px. Se redimensiona y convierte a WebP para carga rápida.
+                    </small>
+                </div>
+            </div>
+
+            <!-- Live SEO Preview -->
+            <div class="acortalink-form">
+                <h5 class="mb-3" style="color:#00ff41;">Vista previa</h5>
+
+                <!-- Google preview -->
+                <p style="color:#ddd; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Google</p>
+                <div class="seo-preview-google">
+                    <div class="seo-preview-google-url" id="prev_google_url">{{ short_url }}</div>
+                    <div class="seo-preview-google-title" id="prev_google_title">{{ link.seo_title|default:link.original_url }}</div>
+                    <div class="seo-preview-google-desc" id="prev_google_desc">{{ link.seo_description|default:'La descripción de tu página aparecerá aquí. Editá el campo de descripción SEO para cambiar este texto.' }}</div>
+                </div>
+
+                <!-- Social card preview -->
+                <p style="color:#ddd; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; margin-top:1.25rem; margin-bottom:0.5rem;">Redes sociales (WhatsApp, Facebook, LinkedIn)</p>
+                <div class="seo-preview-social">
+                    <div class="seo-preview-social-img" id="prev_social_img">
+                        {% if link.seo_image %}
+                        <img src="{{ link.seo_image }}" alt="Preview" style="width:100%; height:100%; object-fit:cover;">
+                        {% else %}
+                        <span style="color:#666; font-size:0.75rem;">Sin imagen</span>
+                        {% endif %}
+                    </div>
+                    <div class="seo-preview-social-body">
+                        <div class="seo-preview-social-domain" id="prev_social_domain">{{ request.get_host }}</div>
+                        <div class="seo-preview-social-title" id="prev_social_title">{{ link.seo_title|default:link.original_url }}</div>
+                        <div class="seo-preview-social-desc" id="prev_social_desc">{{ link.seo_description|default:'' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Redirect (premium only) -->
+        <div class="edit-panel" data-panel="redirect">
+            <div class="acortalink-form">
+                <h5 class="mb-3" style="color:#00ff41;">Tiempo de redirect</h5>
+                <p style="color:#ddd; font-size:0.8rem; margin-bottom:1rem;">
+                    Controlá cuánto tiempo ve el visitante tu página SEO antes de ser redirigido al destino.
+                </p>
+                <div class="mb-3">
+                    <label class="form-label text-light" style="font-size:0.8rem;">Segundos antes de redirect</label>
+                    <div class="d-flex align-items-center gap-3">
+                        <input type="range" name="redirect_seconds" id="redirect_slider"
+                               value="{{ link.redirect_seconds }}" min="0" max="30"
+                               style="flex:1; accent-color:#00ff41;">
+                        <span id="redirect_value" style="color:#00ff41; font-weight:700; min-width:45px; text-align:center;">{{ link.redirect_seconds }}s</span>
+                    </div>
+                    <small class="text-light" style="font-size:0.72rem; display:block; margin-top:0.5rem;">
+                        <strong style="color:#00ff41;">0s</strong> = redirect instantáneo (la página indexa pero el visitante no la ve).<br>
+                        <strong style="color:#00ff41;">5-10s</strong> = el visitante ve tu SEO con un countdown antes de redirigir.<br>
+                        <strong style="color:#00ff41;">30s</strong> = máximo tiempo de exposición.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Password (premium only) -->
+        <div class="edit-panel" data-panel="password">
+            <div class="acortalink-form">
+                <h5 class="mb-3" style="color:#00ff41;">Protección por contraseña</h5>
+                <p style="color:#ddd; font-size:0.8rem; margin-bottom:1rem;">
+                    Si configurás una contraseña, los visitantes deberán ingresarla antes de ser redirigidos.
+                    Útil para links privados o exclusivos.
+                </p>
+                <div class="mb-3">
+                    <label class="form-label text-light" style="font-size:0.8rem;">Contraseña del link</label>
+                    <input type="text" name="password" class="form-control"
+                           placeholder="Dejar vacío para desactivar la protección">
+                    {% if link.password_hash %}
+                    <small style="color:#ffc107; font-size:0.72rem; display:block; margin-top:0.25rem;">
+                        ⚠ Este link tiene contraseña configurada. Dejá el campo vacío para quitarla.
+                    </small>
+                    {% else %}
+                    <small class="text-light" style="font-size:0.72rem;">Sin protección actualmente.</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: QR (premium only) -->
+        <div class="edit-panel" data-panel="qr">
+            <div class="acortalink-form">
+                <h5 class="mb-3" style="color:#00ff41;">Código QR</h5>
+                <p style="color:#ddd; font-size:0.8rem; margin-bottom:1rem;">
+                    Descargá el código QR de tu link para usarlo en materiales físicos, flyers, posters, etc.
+                </p>
+                <div class="d-flex gap-3 align-items-center flex-wrap">
+                    <img src="{% url 'core:qr_code' link.short_code %}" alt="QR code"
+                         style="width:160px; height:160px; border:2px solid #333; border-radius:12px; background:#fff; padding:8px;">
+                    <div class="d-flex flex-column gap-2">
+                        <a href="{% url 'core:qr_code' link.short_code %}" download="qr-{{ link.short_code }}.png"
+                           class="btn btn-sm btn-acortar" style="font-size:0.8rem;">
+                            Descargar PNG
+                        </a>
+                        <a href="{% url 'core:qr_code' link.short_code %}?format=svg" download="qr-{{ link.short_code }}.svg"
+                           class="btn btn-sm btn-outline-light" style="border-color:#555; color:#ddd; font-size:0.8rem;">
+                            Descargar SVG
+                        </a>
+                        <small class="text-light" style="font-size:0.7rem; max-width:180px;">
+                            SVG es escalable sin pérdida de calidad. Ideal para impresión.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Free user upsell -->
+        <div class="edit-panel" data-panel="seo">
+            <div class="acortalink-form" style="text-align:center; padding:2.5rem;">
+                <h5 class="mb-3" style="color:#00ff41;">Configuración SEO</h5>
+                <p style="color:#ddd; font-size:0.9rem; margin-bottom:1.5rem;">
+                    Optimizá tus links para Google y redes sociales.<br>
+                    Título, descripción, imagen de vista previa y más.
+                </p>
+                <a href="{% url 'core:subscribir' %}" class="btn btn-acortar" style="font-size:0.9rem;">
+                    Subscribite para desbloquear SEO
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Submit buttons (always visible) -->
+        <div class="d-flex gap-2 mt-4 justify-content-center">
+            <button type="submit" class="btn btn-acortar" style="min-width:160px;">Guardar cambios</button>
+            <a href="{% url 'core:mis_links' %}" class="btn btn-outline-light" style="border-color:#555; color:#ddd;">Cancelar</a>
+        </div>
+    </form>
 </div>
+
+<script>
+// Tab switching
+document.querySelectorAll('.edit-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+        var target = this.dataset.tab;
+        document.querySelectorAll('.edit-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelectorAll('.edit-panel').forEach(function(p) { p.classList.remove('active'); });
+        this.classList.add('active');
+        document.querySelector('[data-panel="' + target + '"]').classList.add('active');
+    });
+});
+
+// Redirect slider live value
+var slider = document.getElementById('redirect_slider');
+if (slider) {
+    slider.addEventListener('input', function() {
+        document.getElementById('redirect_value').textContent = this.value + 's';
+    });
+}
+
+// Live SEO preview
+var seoTitle = document.getElementById('seo_title');
+var seoDesc = document.getElementById('seo_description');
+var shortUrl = '{{ short_url }}';
+var origUrl = '{{ link.original_url }}';
+var hostDomain = '{{ request.get_host }}';
+
+function updatePreview() {
+    var title = seoTitle ? seoTitle.value : '';
+    var desc = seoDesc ? seoDesc.value : '';
+
+    var googleTitle = document.getElementById('prev_google_title');
+    var googleDesc = document.getElementById('prev_google_desc');
+    var socialTitle = document.getElementById('prev_social_title');
+    var socialDesc = document.getElementById('prev_social_desc');
+
+    if (googleTitle) googleTitle.textContent = title || origUrl;
+    if (googleDesc) googleDesc.textContent = desc || 'La descripción de tu página aparecerá aquí. Editá el campo de descripción SEO para cambiar este texto.';
+    if (socialTitle) socialTitle.textContent = title || origUrl;
+    if (socialDesc) socialDesc.textContent = desc;
+}
+
+if (seoTitle) seoTitle.addEventListener('input', updatePreview);
+if (seoDesc) seoDesc.addEventListener('input', updatePreview);
+
+// OG image file preview
+var ogFile = document.getElementById('og_image_file');
+if (ogFile) {
+    ogFile.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                var socialImg = document.getElementById('prev_social_img');
+                if (socialImg) {
+                    socialImg.innerHTML = '<img src="' + e.target.result + '" alt="Preview" style="width:100%; height:100%; object-fit:cover;">';
+                }
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+}
+</script>
 
 {% endblock %}

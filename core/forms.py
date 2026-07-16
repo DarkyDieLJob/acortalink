@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 
 
-class ContactoAcortadorForm(forms.Form):
+class ContactoAcortalinkForm(forms.Form):
     nombre = forms.CharField(
         max_length=100,
         widget=forms.TextInput(attrs={

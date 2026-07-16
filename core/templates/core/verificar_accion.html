@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block meta_title %}Verificación — Acortador | DieL{% endblock %}
+{% block meta_title %}Verificación — Acortalink | DieL{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
 {% block acortador_content %}
@@ -9,15 +9,15 @@
     <h2 class="console-heading text-center mb-4">Verificación</h2>
 
     {% if no_pending %}
-    <div class="acortador-form text-center">
+    <div class="acortalink-form text-center">
         <div style="font-size:2rem; margin-bottom:1rem;">?</div>
-        <p style="color:#888; font-size:0.9rem; margin-bottom:1.5rem;">
+        <p style="color:#ddd; font-size:0.9rem; margin-bottom:1.5rem;">
             No hay ninguna acción pendiente de verificación.
         </p>
         <a href="{% url 'core:perfil' %}" class="btn btn-sm btn-acortar w-100">Ir a configuración</a>
     </div>
     {% else %}
-    <div class="acortador-form">
+    <div class="acortalink-form">
         <div class="text-center mb-3">
             <div style="font-size:1.5rem; margin-bottom:0.5rem;">📧</div>
             <p style="color:#fff; font-size:0.95rem; margin-bottom:0.25rem;">
@@ -26,7 +26,7 @@
             <p style="color:#00ff41; font-size:0.85rem;">
                 Acción: <strong>{{ action_description }}</strong>
             </p>
-            <p style="color:#555; font-size:0.75rem;">
+            <p style="color:#ddd; font-size:0.75rem;">
                 Expira en 10 minutos.
             </p>
         </div>
@@ -46,10 +46,10 @@
             {% csrf_token %}
             <input type="hidden" name="sub_action" value="verify">
             <div class="mb-3">
-                <label class="form-label text-muted" style="font-size:0.8rem;">Código de verificación</label>
+                <label class="form-label text-light" style="font-size:0.8rem;">Código de verificación</label>
                 <input type="text" name="code" class="form-control" maxlength="6" pattern="[0-9]{6}"
                        placeholder="000000" autofocus
-                       style="background:#0a0a0a; border:1px solid #333; color:#fff; font-size:1.2rem; letter-spacing:0.4rem; text-align:center;" required>
+                        required>
             </div>
             <button type="submit" class="btn btn-acortar w-100">Verificar</button>
         </form>
@@ -58,14 +58,14 @@
             <form method="post" class="flex-fill">
                 {% csrf_token %}
                 <input type="hidden" name="sub_action" value="resend">
-                <button type="submit" class="btn btn-sm btn-outline-light w-100" style="border-color:#333;color:#aaa;">
+                <button type="submit" class="btn btn-sm btn-outline-light w-100" style="border-color:#555;color:#ddd;">
                     Reenviar código
                 </button>
             </form>
             <form method="post" class="flex-fill">
                 {% csrf_token %}
                 <input type="hidden" name="sub_action" value="cancel">
-                <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="border-color:#444;color:#888;">
+                <button type="submit" class="btn btn-sm btn-outline-danger w-100" style="border-color:#555;color:#ddd;">
                     Cancelar
                 </button>
             </form>

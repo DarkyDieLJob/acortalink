@@ -1,0 +1,13 @@
+services:
+  landing:
+    build: ./landing
+    container_name: acortalink-landing
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+    networks:
+      - acortalink-net
+
+networks:
+  acortalink-net:
+    name: acortalink-net

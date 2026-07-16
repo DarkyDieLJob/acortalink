@@ -1,6 +1,6 @@
 {% extends "core/base.html" %}
 
-{% block meta_title %}Bulk CSV — Acortador | DieL{% endblock %}
+{% block meta_title %}Bulk CSV — Acortalink | DieL{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
 
 {% block acortador_content %}
@@ -11,16 +11,16 @@
 <div class="alert alert-danger" role="alert" style="background:#0d0d0d;border:1px solid #dc3545;color:#fff;">{{ error }}</div>
 {% endif %}
 
-<div class="acortador-form" style="max-width:none;">
+<div class="acortalink-form" style="max-width:none;">
     <!-- Descargar plantilla -->
     <div class="mb-4">
-        <label class="form-label text-muted" style="font-size:0.85rem;">1. Descargar plantilla</label>
+        <label class="form-label text-light" style="font-size:0.85rem;">1. Descargar plantilla</label>
         <div class="d-flex gap-2 flex-wrap">
-            <a href="{% url 'core:plantilla' %}" class="btn btn-sm btn-outline-light" style="border-color:#333;color:#aaa;">
+            <a href="{% url 'core:plantilla' %}" class="btn btn-sm btn-outline-light" style="border-color:#555;color:#ddd;">
                 {% if is_premium %}Descargar plantilla premium{% else %}Descargar plantilla free{% endif %}
             </a>
             {% if not is_premium %}
-            <span class="align-self-center" style="font-size:0.75rem;color:#555;">
+            <span class="align-self-center" style="font-size:0.75rem;color:#ddd;">
                 <a href="{% url 'core:subscribir' %}" style="color:#00ff41;">Subscribite</a> para acceder a la plantilla con columnas SEO
             </span>
             {% endif %}
@@ -29,12 +29,12 @@
 
     <!-- Subir CSV -->
     <div class="mb-3">
-        <label class="form-label text-muted" style="font-size:0.85rem;">2. Subir CSV completado</label>
+        <label class="form-label text-light" style="font-size:0.85rem;">2. Subir CSV completado</label>
         <form method="post" enctype="multipart/form-data" id="bulk-form">
             {% csrf_token %}
             <div class="upload-zone" onclick="document.getElementById('csv-file').click()"
                  style="border:2px dashed #333;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;">
-                <div class="text-muted">
+                <div class="text-light">
                     <strong>+ Seleccionar CSV</strong>
                     <br><small>o arrastrá el archivo acá · máx 2 MB · UTF-8</small>
                 </div>
@@ -46,17 +46,17 @@
 
     <!-- Formato de descarga -->
     <div class="mb-3">
-        <label class="form-label text-muted" style="font-size:0.85rem;">3. Formato de descarga del resultado</label>
+        <label class="form-label text-light" style="font-size:0.85rem;">3. Formato de descarga del resultado</label>
         <form method="post" enctype="multipart/form-data" id="format-form">
             {% csrf_token %}
             <div class="d-flex gap-3">
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="format" value="csv" id="fmt-csv" checked>
-                    <label class="form-check-label text-muted" for="fmt-csv">CSV</label>
+                    <label class="form-check-label text-light" for="fmt-csv">CSV</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="format" value="xlsx" id="fmt-xlsx">
-                    <label class="form-check-label text-muted" for="fmt-xlsx">XLSX (Excel)</label>
+                    <label class="form-check-label text-light" for="fmt-xlsx">XLSX (Excel)</label>
                 </div>
             </div>
         </form>
@@ -65,7 +65,7 @@
     <!-- Formato según tier -->
     <div class="mt-3">
         {% if is_premium %}
-        <div style="background:#0a0a0a; border:1px solid #00ff41; border-radius:8px; padding:1rem; color:#aaa; font-size:0.8rem;">
+        <div style="background:#0a0a0a; border:1px solid #00ff41; border-radius:8px; padding:1rem; color:#ddd; font-size:0.8rem;">
             <strong style="color:#00ff41;">Plantilla premium</strong> — 5 columnas:
             <table class="table table-sm table-bordered mb-2" style="margin-top:0.75rem;font-size:0.75rem;border-color:#222;">
                 <thead>
@@ -77,7 +77,7 @@
                         <th class="text-center">redirect_seconds</th>
                     </tr>
                 </thead>
-                <tbody style="color:#666;">
+                <tbody style="color:#ddd;">
                     <tr>
                         <td>https://ejemplo.com/pagina1</td>
                         <td>Título SEO</td>
@@ -94,7 +94,7 @@
                     </tr>
                 </tbody>
             </table>
-            <small style="color:#555;">
+            <small style="color:#ddd;">
                 <strong>seo_title</strong>: título para Google y redes (máx 120)<br>
                 <strong>seo_description</strong>: descripción para Google (máx 300)<br>
                 <strong>seo_image</strong>: URL de imagen miniatura para WhatsApp/Facebook (opcional)<br>
@@ -102,7 +102,7 @@
             </small>
         </div>
         {% else %}
-        <div style="background:#0a0a0a; border:1px solid #222; border-radius:8px; padding:1rem; color:#aaa; font-size:0.8rem;">
+        <div style="background:#0a0a0a; border:1px solid #222; border-radius:8px; padding:1rem; color:#ddd; font-size:0.8rem;">
             <strong style="color:#fff;">Plantilla free</strong> — 1 columna:
             <table class="table table-sm table-bordered mb-0" style="margin-top:0.75rem;font-size:0.75rem;border-color:#222;">
                 <thead>
@@ -110,7 +110,7 @@
                         <th>url</th>
                     </tr>
                 </thead>
-                <tbody style="color:#666;">
+                <tbody style="color:#ddd;">
                     <tr><td>https://ejemplo.com/pagina1</td></tr>
                     <tr><td>https://ejemplo.com/pagina2</td></tr>
                 </tbody>

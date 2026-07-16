@@ -113,11 +113,6 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
         'LOCATION': REDIS_URL,
         'TIMEOUT': 21600,
-        'OPTIONS': {
-            'connection_pool': {
-                'max_connections': 50,
-            },
-        },
     }
 }
 
@@ -161,10 +156,34 @@ STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 MERCADOPAGO_ACCESS_TOKEN = os.environ.get('MERCADOPAGO_ACCESS_TOKEN', '')
 MERCADOPAGO_PUBLIC_KEY = os.environ.get('MERCADOPAGO_PUBLIC_KEY', '')
 MERCADOPAGO_WEBHOOK_SECRET = os.environ.get('MERCADOPAGO_WEBHOOK_SECRET', '')
-MERCADOPAGO_PRICE = int(os.environ.get('MERCADOPAGO_PRICE', '2500'))
 MERCADOPAGO_CURRENCY = os.environ.get('MERCADOPAGO_CURRENCY', 'ARS')
 
-SITE_URL = os.environ.get('SITE_URL', 'http://localhost:8000')
+# Pricing por plan (ARS/mes) — 30% por debajo de competidores
+PLAN_PRICES = {
+    'starter': int(os.environ.get('PLAN_PRICE_STARTER', '4900')),
+    'pro': int(os.environ.get('PLAN_PRICE_PRO', '9800')),
+    'business': int(os.environ.get('PLAN_PRICE_BUSINESS', '28000')),
+}
+# Alias legacy para compatibilidad
+MERCADOPAGO_PRICE = PLAN_PRICES['starter']
+
+SITE_URL = os.environ.get('SITE_URL', 'https://acortalink.com.ar')
+
+# Custom domains
+CNAME_TARGET = os.environ.get('CNAME_TARGET', 'app.acortalink.com.ar')
+DOMAIN_PRICES = {
+    '.com': int(os.environ.get('DOMAIN_PRICE_COM', '1200')),
+    '.net': int(os.environ.get('DOMAIN_PRICE_NET', '1500')),
+    '.org': int(os.environ.get('DOMAIN_PRICE_ORG', '1300')),
+    '.io': int(os.environ.get('DOMAIN_PRICE_IO', '3500')),
+    '.dev': int(os.environ.get('DOMAIN_PRICE_DEV', '3000')),
+    '.app': int(os.environ.get('DOMAIN_PRICE_APP', '2500')),
+    '.ar': int(os.environ.get('DOMAIN_PRICE_AR', '2000')),
+}
+# Registrar API (Namecheap, ResellerClub, etc.)
+REGISTRAR_API_URL = os.environ.get('REGISTRAR_API_URL', '')
+REGISTRAR_API_KEY = os.environ.get('REGISTRAR_API_KEY', '')
+REGISTRAR_API_USER = os.environ.get('REGISTRAR_API_USER', '')
 
 # Field-level encryption (django-cryptography)
 FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY', '')
