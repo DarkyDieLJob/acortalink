@@ -2,6 +2,7 @@ from django.urls import path, include
 
 from . import views
 from .api import api_urls
+from .internal_api import internal_urls
 
 app_name = 'core'
 
@@ -31,4 +32,5 @@ urlpatterns = [
     path('webhooks/', views.webhooks, name='webhooks'),
     path('api-keys/', views.api_keys, name='api_keys'),
     path('api/v1/', include(api_urls)),
+    path('api/internal/', include(internal_urls)),
 ]
