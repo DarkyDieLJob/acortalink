@@ -1,12 +1,12 @@
-"""Gunicorn config for 750 concurrent users.
+"""Gunicorn config for high-concurrency acortador.
 
-VPS recomendado: 2 vCPU / 4GB RAM
-- workers = (2 * CPU) + 1 = 5
-- threads = 4 → 20 concurrent requests max
+VPS: 4 vCPU / 3.8GB RAM (shared with other containers)
+- workers = 15 (override via GUNICORN_WORKERS env)
+- threads = 4 → 60 concurrent requests max
 - worker_class = gthread (async I/O within sync Django)
 
 Con Redis cache, los redirects son cache hits (sub-millisecond),
-así que 20 conexiones concurrentes manejan ~2000 req/s.
+así que 60 conexiones concurrentes manejan ~3000+ req/s.
 """
 
 import multiprocessing
