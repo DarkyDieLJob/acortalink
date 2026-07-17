@@ -249,7 +249,13 @@ def health(request):
         cache.set('health:check', '1', timeout=10)
         redis_ok = cache.get('health:check') == '1'
         if hasattr(cache, '_cache'):
-            info = cache._cache.info()
+            client = cache._cache
+            if hasattr(client, 'info'):
+                info = client.info()
+            elif hasattr(client, 'client'):
+                info = client.client.info()
+            else:
+                info = {}
             redis_info = {
                 'connected_clients': info.get('connected_clients'),
                 'used_memory_human': info.get('used_memory_human'),
