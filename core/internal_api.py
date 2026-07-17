@@ -248,23 +248,31 @@ def health(request):
     try:
         cache.set('health:check', '1', timeout=10)
         redis_ok = cache.get('health:check') == '1'
-        if hasattr(cache, '_cache'):
-            client = cache._cache
-            if hasattr(client, 'info'):
-                info = client.info()
-            elif hasattr(client, 'client'):
-                info = client.client.info()
-            else:
-                info = {}
-            redis_info = {
-                'connected_clients': info.get('connected_clients'),
-                'used_memory_human': info.get('used_memory_human'),
-                'total_commands_processed': info.get('total_commands_processed'),
-                'uptime_in_seconds': info.get('uptime_in_seconds'),
-            }
     except Exception as e:
         redis_ok = False
         redis_info = {'error': str(e)}
+
+    if redis_ok:
+        import subprocess
+        try:
+            result = subprocess.run(
+                ['docker', 'exec', 'acortalink-redis-1', 'redis-cli', 'info'],
+                capture_output=True, text=True, timeout=5,
+            )
+            if result.returncode == 0:
+                info = {}
+                for line in result.stdout.strip().split('\n'):
+                    if ':' in line:
+                        k, v = line.split(':', 1)
+                        info[k] = v
+                redis_info = {
+                    'connected_clients': info.get('connected_clients'),
+                    'used_memory_human': info.get('used_memory_human'),
+                    'total_commands_processed': info.get('total_commands_processed'),
+                    'uptime_in_seconds': info.get('uptime_in_seconds'),
+                }
+        except Exception:
+            pass
 
     db_ok = True
     db_info = {}
