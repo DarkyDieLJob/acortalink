@@ -6,13 +6,34 @@
 {% block acortador_content %}
 
 <div style="max-width:760px; margin:0 auto;">
-    <h2 class="console-heading mb-3">Dominios personalizados</h2>
 
-    <div style="background:#0d0d0d; border:1px solid #333; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1.5rem; color:#ddd; font-size:0.8rem;">
-        Plan <strong style="color:#00ff41;">{{ plan|title }}</strong> —
-        {{ domain_count }}/{{ domain_limit }} dominios usados
+    <!-- Header -->
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div style="font-size:2rem;">🌐</div>
+        <div>
+            <h2 class="console-heading mb-0">Dominios personalizados</h2>
+            <p style="color:#888; font-size:0.8rem; margin:0.25rem 0 0 0;">
+                Usá tu propio dominio para tus links acortados.
+            </p>
+        </div>
     </div>
 
+    <!-- Plan card -->
+    <div style="background:#0d0d0d; border:1px solid #333; border-radius:12px; padding:1rem 1.25rem; margin-bottom:1.5rem;">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span style="color:#ddd; font-size:0.82rem;">
+                Plan <strong style="color:#00ff41;">{{ plan|title }}</strong>
+            </span>
+            <span style="color:#ddd; font-size:0.82rem;">
+                <strong style="color:{% if domain_count >= domain_limit %}#dc3545{% else %}#00ff41{% endif %};">{{ domain_count }}</strong> / {{ domain_limit }} dominios
+            </span>
+        </div>
+        <div style="background:#1a1a1a; border-radius:6px; height:6px; overflow:hidden;">
+            <div style="background:linear-gradient(90deg, #00ff41, #00cc33); height:100%; width:{% widthratio domain_count domain_limit 100 %}%; border-radius:6px; transition:width 0.3s;"></div>
+        </div>
+    </div>
+
+    <!-- Checkout status alerts -->
     {% if checkout_status == 'success' %}
     <div style="background:#0d1a0d; border:1px solid #00ff41; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#fff; font-size:0.85rem;">
         <strong style="color:#00ff41;">✓ Pago aprobado.</strong> Tu dominio está siendo registrado. Esto puede tardar unos minutos.
@@ -33,47 +54,67 @@
     </div>
     {% endif %}
 
-    <!-- Tabs -->
-    <div class="edit-tabs mb-3">
-        <button type="button" class="edit-tab active" data-tab="byod">🌐 Traer mi dominio</button>
-        <!-- <button type="button" class="edit-tab" data-tab="buy">🛒 Comprar dominio</button> -->
-    </div>
+    <!-- Add domain section -->
+    <div class="acortalink-form mb-4">
+        <h5 class="mb-3" style="color:#00ff41;">
+            <span style="font-size:1.1rem;">🔗</span> Traer mi dominio
+        </h5>
 
-    <!-- Tab: BYOD -->
-    <div class="edit-panel active" data-panel="byod">
-        <div class="acortalink-form mb-3">
-            <h5 class="mb-3" style="color:#00ff41;">Traer mi dominio</h5>
-            <p style="color:#ddd; font-size:0.85rem; margin-bottom:1rem;">
-                ¿Ya tenés un dominio? Configuralo acá. Vas a necesitar acceso a tu panel de DNS.
-            </p>
-
-            <div style="background:#0a0a0a; border:1px solid #333; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1.25rem; color:#ddd; font-size:0.8rem;">
-                <strong style="color:#00ff41;">Pasos:</strong><br>
-                1. Agregá tu dominio abajo<br>
-                2. En tu panel de DNS, creá un registro <strong style="color:#fff;">CNAME</strong> apuntando a <code style="color:#00ff41;">{{ cname_target }}</code><br>
-                3. Volvé acá y clickeá "Verificar DNS"<br>
-                4. Cuando se verifique, el dominio queda <strong style="color:#00ff41;">activo</strong>
+        <!-- Wizard steps -->
+        <div class="d-flex flex-wrap gap-2 mb-3" style="font-size:0.75rem;">
+            <div style="background:#0a0a0a; border:1px solid #333; border-radius:6px; padding:0.4rem 0.7rem; color:#ddd;">
+                <span style="color:#00ff41;">①</span> Agregá tu dominio
             </div>
-
-            {% if domain_count < domain_limit %}
-            <form method="post">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="add">
-                <label class="form-label text-light" style="font-size:0.8rem;">Tu dominio</label>
-                <input type="text" name="domain" class="form-control mb-2"
-                       placeholder="mislinks.com" required>
-                <small class="text-light" style="font-size:0.72rem; display:block; margin-bottom:0.75rem;">
-                    Sin http:// ni www. Solo el dominio base.
-                </small>
-                <button type="submit" class="btn btn-sm btn-acortar">Agregar dominio</button>
-            </form>
-            {% else %}
-            <div style="background:#0d0d0d; border:1px solid #ffc107; border-radius:8px; padding:0.75rem 1rem; color:#ddd; font-size:0.85rem;">
-                Alcanzaste el límite de dominios para tu plan.
-                <a href="{% url 'core:subscribir' %}" style="color:#00ff41;">Upgradear plan →</a>
+            <div style="color:#555; padding:0.4rem 0;">→</div>
+            <div style="background:#0a0a0a; border:1px solid #333; border-radius:6px; padding:0.4rem 0.7rem; color:#ddd;">
+                <span style="color:#00ff41;">②</span> Configurá CNAME
             </div>
-            {% endif %}
+            <div style="color:#555; padding:0.4rem 0;">→</div>
+            <div style="background:#0a0a0a; border:1px solid #333; border-radius:6px; padding:0.4rem 0.7rem; color:#ddd;">
+                <span style="color:#00ff41;">③</span> Verificá DNS
+            </div>
+            <div style="color:#555; padding:0.4rem 0;">→</div>
+            <div style="background:#0a0a0a; border:1px solid #333; border-radius:6px; padding:0.4rem 0.7rem; color:#ddd;">
+                <span style="color:#00ff41;">④</span> ¡Activo!
+            </div>
         </div>
+
+        <!-- CNAME info box -->
+        <div style="background:#0a0a0a; border:1px solid #333; border-radius:8px; padding:0.75rem 1rem; margin-bottom:1.25rem; color:#ddd; font-size:0.8rem;">
+            <div style="margin-bottom:0.5rem;">
+                <strong style="color:#00ff41;">📋 CNAME a configurar:</strong>
+            </div>
+            <div style="background:#111; border:1px solid #333; border-radius:6px; padding:0.5rem 0.75rem; font-family:monospace; font-size:0.85rem; color:#00ff41; display:flex; align-items:center; justify-content:space-between;">
+                <span>{{ cname_target }}</span>
+                <button type="button" onclick="navigator.clipboard.writeText('{{ cname_target }}'); this.textContent='✓'; setTimeout(()=>this.textContent='📋',1500);" style="background:none; border:1px solid #333; border-radius:4px; color:#888; font-size:0.7rem; padding:0.15rem 0.4rem; cursor:pointer;">📋</button>
+            </div>
+            <p style="margin:0.5rem 0 0 0; color:#888; font-size:0.72rem;">
+                En tu panel de DNS (GoDaddy, Namecheap, DonWeb, etc.) creá un registro CNAME apuntando a la dirección de arriba.
+            </p>
+        </div>
+
+        {% if domain_count < domain_limit %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add">
+            <label class="form-label text-light" style="font-size:0.8rem;">Tu dominio</label>
+            <div class="input-group mb-2">
+                <input type="text" name="domain" class="form-control"
+                       placeholder="mislinks.com" required
+                       style="font-size:1rem;">
+                <button type="submit" class="btn btn-acortar" style="font-size:0.85rem;">+ Agregar</button>
+            </div>
+            <small class="text-light" style="font-size:0.72rem;">
+                Sin http:// ni www. Solo el dominio base.
+            </small>
+        </form>
+        {% else %}
+        <div style="background:#0d0d0d; border:1px solid #ffc107; border-radius:8px; padding:0.75rem 1rem; color:#ddd; font-size:0.85rem;">
+            <strong style="color:#ffc107;">⚠ Límite alcanzado.</strong>
+            Alcanzaste los {{ domain_limit }} dominios de tu plan.
+            <a href="{% url 'core:subscribir' %}" style="color:#00ff41;">Upgradear plan →</a>
+        </div>
+        {% endif %}
     </div>
 
     <!-- Tab: Buy (hidden — for future use when registrar affiliate/reseller is enabled)
@@ -163,71 +204,82 @@
 
     <!-- DonWeb affiliate referral (hidden — enable via DONWEB_AFFILIATE_ENABLED=True) -->
     {% if donweb_affiliate_enabled and donweb_affiliate_link %}
-    <div class="acortalink-form mb-3" style="background:#0d0d0d; border:1px solid #333; border-radius:8px; padding:1rem 1.25rem;">
-        <h5 class="mb-2" style="color:#00ff41;">¿No tenés dominio? Compralo en DonWeb</h5>
-        <p style="color:#ddd; font-size:0.82rem; margin-bottom:0.75rem;">
-            Si todavía no tenés un dominio, podés comprarlo en DonWeb con
-            <strong style="color:#00ff41;">20% OFF en tu primera compra</strong>
-            usando nuestro link de referido. Después agregalo acá arriba y listo.
-        </p>
-        <a href="{{ donweb_affiliate_link }}" target="_blank" rel="nofollow sponsored noopener"
-           class="btn btn-sm btn-acortar" style="text-decoration:none;">
-            Comprar dominio en DonWeb con 20% OFF →
-        </a>
-        <p style="color:#555; font-size:0.65rem; margin-top:0.5rem; margin-bottom:0;">
-            Link de referido. Acortalink puede recibir una comisión por tu compra.
-        </p>
+    <div class="acortalink-form mb-4" style="border-color:#00cc33; border-style:dashed;">
+        <div class="d-flex align-items-start gap-3">
+            <div style="font-size:1.5rem;">🛒</div>
+            <div style="flex:1;">
+                <h5 class="mb-1" style="color:#00ff41;">¿No tenés dominio?</h5>
+                <p style="color:#ddd; font-size:0.82rem; margin-bottom:0.75rem;">
+                    Compralo en DonWeb con <strong style="color:#00ff41;">20% OFF en tu primera compra</strong>.
+                    Después volvé y agregalo acá arriba.
+                </p>
+                <a href="{{ donweb_affiliate_link }}" target="_blank" rel="nofollow sponsored noopener"
+                   class="btn btn-sm btn-acortar" style="text-decoration:none;">
+                    Comprar en DonWeb con descuento →
+                </a>
+                <p style="color:#555; font-size:0.65rem; margin-top:0.5rem; margin-bottom:0;">
+                    Link de referido. Acortalink puede recibir una comisión por tu compra.
+                </p>
+            </div>
+        </div>
     </div>
     {% endif %}
 
     <!-- Domain list -->
     {% if domains %}
     <div class="acortalink-form">
-        <h5 class="mb-3" style="color:#00ff41;">Mis dominios</h5>
+        <h5 class="mb-3" style="color:#00ff41;">
+            <span style="font-size:1.1rem;">📋</span> Mis dominios
+        </h5>
         <div class="table-responsive">
             <table class="table links-table mb-0">
                 <thead>
                     <tr>
-                        <th>Dominio</th>
+                        <th style="min-width:140px;">Dominio</th>
                         <th>Tipo</th>
-                        <th>Links</th>
+                        <th class="text-center">Links</th>
                         <th>Estado</th>
-                        <th>Acciones</th>
+                        <th class="text-end">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for d in domains %}
                     <tr>
-                        <td style="color:#00ff41; font-weight:700;">{{ d.domain }}</td>
+                        <td>
+                            <div style="color:#00ff41; font-weight:700; font-size:0.95rem;">{{ d.domain }}</div>
+                            {% if d.status == 'active' %}
+                            <div style="font-size:0.65rem; color:#555;">{{ d.creado|date:"d/m/Y" }}</div>
+                            {% endif %}
+                        </td>
                         <td style="font-size:0.75rem;">
                             {% if d.source == 'purchased' %}
-                                <span style="color:#00ccff;">Comprado</span>
+                                <span style="color:#00ccff;">🛒 Comprado</span>
                             {% else %}
-                                <span style="color:#ddd;">Propio</span>
+                                <span style="color:#888;">🔗 Propio</span>
                             {% endif %}
                         </td>
-                        <td style="font-size:0.85rem;">{{ d.link_count }}</td>
+                        <td class="text-center" style="font-size:0.85rem; color:#ddd;">{{ d.link_count }}</td>
                         <td>
                             {% if d.status == 'active' %}
-                                <span style="color:#00ff41;">✓ Activo</span>
+                                <span style="color:#00ff41; font-size:0.8rem;">● Activo</span>
                             {% elif d.status == 'pending' %}
-                                <span style="color:#ffc107;">⏳ Pendiente</span>
+                                <span style="color:#ffc107; font-size:0.8rem;">● Pendiente</span>
                                 {% if d.source == 'purchased' and d.purchase_status == 'purchase_pending' %}
-                                <div style="font-size:0.68rem; color:#ffc107;">Pago pendiente</div>
+                                <div style="font-size:0.65rem; color:#ffc107;">Pago pendiente</div>
                                 {% endif %}
                             {% elif d.status == 'failed' %}
-                                <span style="color:#dc3545;">✗ Fallido</span>
+                                <span style="color:#dc3545; font-size:0.8rem;">● Fallido</span>
                             {% endif %}
                         </td>
-                        <td>
-                            <div class="d-flex gap-2 flex-wrap">
+                        <td class="text-end">
+                            <div class="d-flex gap-1 flex-wrap justify-content-end">
                                 {% if d.status != 'active' and d.source == 'byod' %}
                                 <form method="post" style="display:inline;">
                                     {% csrf_token %}
                                     <input type="hidden" name="action" value="verify">
                                     <input type="hidden" name="pk" value="{{ d.pk }}">
-                                    <button type="submit" style="color:#00ff41; background:none; border:1px solid #00ff41; border-radius:4px; cursor:pointer; font-size:0.72rem; padding:0.15rem 0.5rem;">
-                                        Verificar DNS
+                                    <button type="submit" style="color:#00ff41; background:none; border:1px solid #00ff41; border-radius:4px; cursor:pointer; font-size:0.7rem; padding:0.2rem 0.6rem; white-space:nowrap;">
+                                        ✓ Verificar
                                     </button>
                                 </form>
                                 {% endif %}
@@ -236,7 +288,7 @@
                                     {% csrf_token %}
                                     <input type="hidden" name="action" value="delete">
                                     <input type="hidden" name="pk" value="{{ d.pk }}">
-                                    <button type="submit" style="color:#dc3545; background:none; border:none; cursor:pointer; font-size:0.8rem;">Eliminar</button>
+                                    <button type="submit" style="color:#dc3545; background:none; border:1px solid #444; border-radius:4px; cursor:pointer; font-size:0.7rem; padding:0.2rem 0.6rem; white-space:nowrap;">✕</button>
                                 </form>
                             </div>
                         </td>
@@ -246,23 +298,20 @@
             </table>
         </div>
     </div>
+    {% else %}
+    <!-- Empty state -->
+    <div class="acortalink-form text-center" style="padding:2.5rem 1.5rem;">
+        <div style="font-size:2.5rem; margin-bottom:0.75rem; opacity:0.4;">🌐</div>
+        <p style="color:#888; font-size:0.9rem; margin:0;">
+            Todavía no agregaste dominios.<br>
+            Agregá tu dominio arriba para empezar.
+        </p>
+    </div>
     {% endif %}
 
     <div class="mt-4 text-center">
         <a href="{% url 'core:perfil' %}" class="console-link">← Volver al perfil</a>
     </div>
 </div>
-
-<script>
-document.querySelectorAll('.edit-tab').forEach(function(tab) {
-    tab.addEventListener('click', function() {
-        var target = this.dataset.tab;
-        document.querySelectorAll('.edit-tab').forEach(function(t) { t.classList.remove('active'); });
-        document.querySelectorAll('.edit-panel').forEach(function(p) { p.classList.remove('active'); });
-        this.classList.add('active');
-        document.querySelector('[data-panel="' + target + '"]').classList.add('active');
-    });
-});
-</script>
 
 {% endblock %}
