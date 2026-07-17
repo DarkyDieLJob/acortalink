@@ -253,24 +253,17 @@ def health(request):
         redis_info = {'error': str(e)}
 
     if redis_ok:
-        import subprocess
         try:
-            result = subprocess.run(
-                ['docker', 'exec', 'acortalink-redis-1', 'redis-cli', 'info'],
-                capture_output=True, text=True, timeout=5,
-            )
-            if result.returncode == 0:
-                info = {}
-                for line in result.stdout.strip().split('\n'):
-                    if ':' in line:
-                        k, v = line.split(':', 1)
-                        info[k] = v
-                redis_info = {
-                    'connected_clients': info.get('connected_clients'),
-                    'used_memory_human': info.get('used_memory_human'),
-                    'total_commands_processed': info.get('total_commands_processed'),
-                    'uptime_in_seconds': info.get('uptime_in_seconds'),
-                }
+            import redis as redis_lib
+            redis_url = getattr(django_settings, 'REDIS_URL', 'redis://127.0.0.1:6379/0')
+            r = redis_lib.from_url(redis_url)
+            info = r.info()
+            redis_info = {
+                'connected_clients': info.get('connected_clients'),
+                'used_memory_human': info.get('used_memory_human'),
+                'total_commands_processed': info.get('total_commands_processed'),
+                'uptime_in_seconds': info.get('uptime_in_seconds'),
+            }
         except Exception:
             pass
 
