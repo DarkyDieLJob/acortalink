@@ -218,10 +218,10 @@ def _is_premium(user):
     return sub is not None and sub.is_active
 
 
-def _check_rate_limit(user):
+def _check_rate_limit(user, request=None):
     """Rate limit: 50 links/hora para free, 500/hora para premium."""
     limit = 500 if _is_premium(user) else 50
-    allowed, _ = rate_limit(f'link_quota:{user.pk}', limit=limit, ttl=3600)
+    allowed, _ = rate_limit(f'link_quota:{user.pk}', limit=limit, ttl=3600, request=request)
     return allowed
 
 
@@ -253,7 +253,7 @@ def index(request):
             is_valid, url_error = _validate_url(original_url, request)
             if not is_valid:
                 error = url_error
-            elif not _check_rate_limit(request.user):
+            elif not _check_rate_limit(request.user, request):
                 error = 'Límite de links por hora alcanzado. Intentá más tarde.'
             else:
                 # Deduplicacion: si el usuario ya acorto esta URL, devolver el existente
@@ -339,7 +339,7 @@ def redirect_view(request, code):
     """
     # Rate limit por IP: 60 redirects/minuto (prevenir DoS) — antes de DB lookup
     ip = client_ip(request)
-    allowed, _ = rate_limit(f'redir:{ip}', limit=60, ttl=60)
+    allowed, _ = rate_limit(f'redir:{ip}', limit=60, ttl=60, request=request)
     if not allowed:
         return HttpResponse(status=429)
 
@@ -972,7 +972,7 @@ def registro(request):
         ip = client_ip(request)
 
         # Anti-flooding: 3 registros por IP por hora
-        allowed, _ = rate_limit(f'register:{ip}', limit=3, ttl=3600)
+        allowed, _ = rate_limit(f'register:{ip}', limit=3, ttl=3600, request=request)
         if not allowed:
             return render(request, 'core/registro.html', {
                 'form': UserCreationForm(),
@@ -1062,7 +1062,7 @@ def login_acortador(request):
         ip = client_ip(request)
 
         # Brute-force protection: 10 intentos por IP cada 15 min
-        allowed, remaining = rate_limit(f'login:{ip}', limit=10, ttl=900)
+        allowed, remaining = rate_limit(f'login:{ip}', limit=10, ttl=900, request=request)
         if not allowed:
             error = True
             error_msg = 'Demasiados intentos. Esperá 15 minutos antes de reintentar.'
@@ -1188,7 +1188,7 @@ def contacto_acortador(request):
         ip = client_ip(request)
 
         # Rate limit: 3 mensajes por IP cada hora
-        allowed, _ = rate_limit(f'contact:{ip}', limit=3, ttl=3600)
+        allowed, _ = rate_limit(f'contact:{ip}', limit=3, ttl=3600, request=request)
         if not allowed:
             return render(request, 'core/contacto.html', {
                 'form': ContactoAcortalinkForm(),
@@ -1300,7 +1300,7 @@ def reportar_link(request, code):
 
         # Rate limit: 1 reporte por IP cada 10 min
         ip = client_ip(request)
-        allowed, _ = rate_limit(f'report_quota:{ip}', limit=1, ttl=600)
+        allowed, _ = rate_limit(f'report_quota:{ip}', limit=1, ttl=600, request=request)
         if not allowed:
             return render(request, 'core/reportar.html', {
                 'link': link,

@@ -20,20 +20,31 @@ Usage:
 from django.core.cache import cache
 
 
-def rate_limit(key, limit, ttl):
+def _is_bypassed(request):
+    """Check if rate limiting should be bypassed (maintenance mode + internal IP)."""
+    return getattr(getattr(request, '_maintenance_bypass', False), '__bool__', lambda: False)()
+
+
+def rate_limit(key, limit, ttl, request=None):
     """Atomic sliding-window rate limit.
 
     Increments a counter in cache atomically. Returns (allowed, remaining).
     On first call, initializes the key with TTL.
 
+    If request is provided and maintenance bypass is active, always allows.
+
     Args:
         key: Cache key (should include IP or user ID).
         limit: Max requests allowed in the window.
         ttl: Window duration in seconds.
+        request: Optional HttpRequest to check maintenance bypass.
 
     Returns:
         (True, remaining) if under limit, (False, 0) if exceeded.
     """
+    if request is not None and _is_bypassed(request):
+        return True, limit
+
     cache.add(key, 0, ttl)
     try:
         current = cache.incr(key)
@@ -46,11 +57,15 @@ def rate_limit(key, limit, ttl):
     return True, limit - current
 
 
-def burst_limit(key, ttl):
+def burst_limit(key, ttl, request=None):
     """Anti-burst: allows 1 request per TTL seconds.
 
     Returns True if allowed (first request in window), False if blocked.
+
+    If request is provided and maintenance bypass is active, always allows.
     """
+    if request is not None and _is_bypassed(request):
+        return True
     if cache.add(key, 1, ttl):
         return True
     return False

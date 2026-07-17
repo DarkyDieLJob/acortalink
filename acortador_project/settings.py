@@ -20,6 +20,11 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 FORCE_SCRIPT_NAME = os.environ.get('FORCE_SCRIPT_NAME', '')
 
+# Maintenance mode — blocks external traffic, allows internal IPs for testing
+MAINTENANCE_MODE = os.environ.get('MAINTENANCE_MODE', 'False').lower() in ('true', '1', 'yes')
+_maint_ips = os.environ.get('MAINTENANCE_ALLOWED_IPS', '')
+MAINTENANCE_ALLOWED_IPS = [ip.strip() for ip in _maint_ips.split(',') if ip.strip()]
+
 CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'False').lower() in ('true', '1', 'yes')
 SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() in ('true', '1', 'yes')
 
@@ -38,6 +43,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'acortador_project.maintenance.MaintenanceModeMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
