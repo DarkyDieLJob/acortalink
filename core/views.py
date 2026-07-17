@@ -1201,11 +1201,14 @@ def contacto_acortador(request):
         if form.is_valid():
             nombre = form.cleaned_data['nombre']
             email = form.cleaned_data['email']
+            tipo = form.cleaned_data['tipo']
             mensaje = form.cleaned_data['mensaje']
+            tipo_label = dict(ContactoAcortalinkForm.TIPO_CHOICES).get(tipo, tipo)
             if settings.EMAIL_HOST_USER and settings.EMAIL_HOST_PASSWORD:
                 send_mail(
-                    subject=f'[Acortalink] Solicitud premium de {nombre}',
+                    subject=f'[Acortalink] {tipo_label} — {nombre}',
                     message=(
+                        f'Tipo: {tipo_label}\n'
                         f'Nombre: {nombre}\n'
                         f'Email: {email}\n\n'
                         f'Mensaje:\n{mensaje}'
