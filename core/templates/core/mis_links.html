@@ -1,4 +1,5 @@
 {% extends "core/base.html" %}
+{% load static %}
 
 {% block meta_title %}Mis links — Acortalink | DieL{% endblock %}
 {% block meta_robots %}noindex, nofollow{% endblock %}
@@ -88,6 +89,7 @@
                 <th class="text-center">SEO</th>
                 <th class="text-center">Clicks</th>
                 <th class="text-center">Creado</th>
+                <th class="text-center">QR</th>
                 <th class="text-center">Acciones</th>
             </tr>
         </thead>
@@ -114,6 +116,16 @@
                 </td>
                 <td class="text-center">{{ link.clicks }}</td>
                 <td class="text-center" style="font-size:0.75rem;color:#ddd;">{{ link.creado|date:"d/m/Y" }}</td>
+                <td class="text-center" style="padding:0.3rem;">
+                    <div class="qr-thumb"
+                         data-url="{{ request.scheme }}://{{ request.get_host|escapejs }}/s/{{ link.short_code }}/"
+                         data-code="{{ link.short_code }}"
+                         style="width:36px; height:36px; border:1px solid #333; border-radius:5px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:#fff; transition:border-color 0.15s;"
+                         onmouseover="this.style.borderColor='#00ff41';"
+                         onmouseout="this.style.borderColor='#333';"
+                         onclick="openQRModal('{{ link.short_code }}', '{{ request.scheme }}://{{ request.get_host|escapejs }}/s/{{ link.short_code }}/')">
+                    </div>
+                </td>
                 <td class="text-center">
                     <div class="d-flex gap-1 justify-content-center">
                         <button class="btn btn-sm btn-outline-light" style="font-size:0.7rem;padding:0.15rem 0.4rem;"
@@ -144,5 +156,93 @@
     {% endif %}
 </div>
 {% endif %}
+
+<!-- QR Modal -->
+<div id="qrModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this)closeQRModal()">
+    <div style="background:#111; border:1px solid #333; border-radius:16px; padding:2rem; max-width:360px; width:90%; text-align:center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+            <h5 id="qrModalTitle" style="color:#00ff41; margin:0; font-size:1rem;">QR del link</h5>
+            <button type="button" onclick="closeQRModal()" style="background:none; border:none; color:#888; font-size:1.3rem; cursor:pointer; padding:0; line-height:1;">✕</button>
+        </div>
+        <div id="qrModalCanvas" style="background:#fff; border-radius:12px; padding:1rem; display:inline-block; margin-bottom:1rem;"></div>
+        <div id="qrModalUrl" style="color:#888; font-size:0.72rem; margin-bottom:1.25rem; word-break:break-all;"></div>
+        <div class="d-flex gap-2 justify-content-center">
+            <button type="button" id="qrDownloadBtn" class="btn btn-sm btn-acortar" style="font-size:0.8rem;">⬇ Descargar PNG</button>
+            <button type="button" onclick="closeQRModal()" class="btn btn-sm" style="background:#222; color:#ddd; border:1px solid #444; font-size:0.8rem;">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/qrcode.min.js' %}"></script>
+<script>
+(function() {
+    document.querySelectorAll('.qr-thumb').forEach(function(el) {
+        var url = el.dataset.url;
+        try {
+            var qr = qrcode(0, 'M');
+            qr.addData(url);
+            qr.make();
+            el.innerHTML = qr.createSvgTag({ cellSize: 2, margin: 1, scalable: true });
+            var svg = el.querySelector('svg');
+            if (svg) { svg.style.width = '32px'; svg.style.height = '32px'; }
+        } catch(e) {
+            el.textContent = 'QR';
+            el.style.color = '#888';
+            el.style.fontSize = '0.55rem';
+        }
+    });
+})();
+
+var qrModal = document.getElementById('qrModal');
+var qrModalCanvas = document.getElementById('qrModalCanvas');
+var qrModalUrl = document.getElementById('qrModalUrl');
+var qrModalTitle = document.getElementById('qrModalTitle');
+var qrDownloadBtn = document.getElementById('qrDownloadBtn');
+var currentQRDataUrl = '';
+
+function openQRModal(code, url) {
+    qrModalTitle.textContent = 'QR — ' + code;
+    qrModalUrl.textContent = url;
+    qrModalCanvas.innerHTML = '';
+    try {
+        var qr = qrcode(0, 'M');
+        qr.addData(url);
+        qr.make();
+        qrModalCanvas.innerHTML = qr.createSvgTag({ cellSize: 5, margin: 2, scalable: true });
+        var svg = qrModalCanvas.querySelector('svg');
+        if (svg) { svg.style.width = '220px'; svg.style.height = '220px'; }
+        var count = qr.getModuleCount();
+        var cellSize = 5, margin = 2;
+        var size = (count + margin * 2) * cellSize;
+        var canvas = document.createElement('canvas');
+        canvas.width = size; canvas.height = size;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = '#000';
+        for (var r = 0; r < count; r++) {
+            for (var c = 0; c < count; c++) {
+                if (qr.isDark(r, c)) ctx.fillRect((c + margin) * cellSize, (r + margin) * cellSize, cellSize, cellSize);
+            }
+        }
+        currentQRDataUrl = canvas.toDataURL('image/png');
+    } catch(e) {
+        qrModalCanvas.innerHTML = '<p style="color:#888;font-size:0.8rem;">Error</p>';
+        currentQRDataUrl = '';
+    }
+    qrModal.style.display = 'flex';
+}
+
+function closeQRModal() { qrModal.style.display = 'none'; }
+
+qrDownloadBtn.addEventListener('click', function() {
+    if (!currentQRDataUrl) return;
+    var a = document.createElement('a');
+    a.href = currentQRDataUrl;
+    a.download = 'qr-link.png';
+    a.click();
+});
+
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeQRModal(); });
+</script>
 
 {% endblock %}
