@@ -117,90 +117,11 @@
         {% endif %}
     </div>
 
-    <!-- Tab: Buy (hidden — for future use when registrar affiliate/reseller is enabled)
-    <div class="edit-panel" data-panel="buy">
-        <div class="acortalink-form mb-3">
-            <h5 class="mb-3" style="color:#00ff41;">Comprar dominio</h5>
-            <p style="color:#ddd; font-size:0.85rem; margin-bottom:1rem;">
-                Buscá disponibilidad y comprá el dominio directamente desde acá.
-                Pago via MercadoPago, registro automático.
-            </p>
-
-            <!-- Search form -->
-            <form method="post">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="search">
-                <label class="form-label text-light" style="font-size:0.8rem;">Buscar dominio</label>
-                <div class="input-group mb-2">
-                    <input type="text" name="domain" class="form-control"
-                           placeholder="mislinks.com" required>
-                    <button type="submit" class="btn btn-sm btn-acortar">Buscar</button>
-                </div>
-                <small class="text-light" style="font-size:0.72rem;">
-                    Ingresá el dominio que querés comprar. Te decimos si está disponible y su precio.
-                </small>
-            </form>
-
-            <!-- Search results -->
-            {% if search_result %}
-            <div style="background:#0a0a0a; border:1px solid {% if search_result.available %}#00ff41{% else %}#dc3545{% endif %}; border-radius:8px; padding:1rem 1.25rem; margin-top:1rem;">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
-                    <div>
-                        <span style="font-size:1.1rem; font-weight:700; color:#fff;">{{ search_result.domain }}</span>
-                        {% if search_result.available %}
-                        <span style="color:#00ff41; font-size:0.85rem; margin-left:0.5rem;">✓ Disponible</span>
-                        {% else %}
-                        <span style="color:#dc3545; font-size:0.85rem; margin-left:0.5rem;">✗ No disponible</span>
-                        {% endif %}
-                    </div>
-                    {% if search_result.available and search_result.price %}
-                    <div style="text-align:right;">
-                        <div style="color:#00ff41; font-size:1.2rem; font-weight:700;">${{ search_result.price|floatformat:0 }} ARS</div>
-                        <small style="color:#ddd; font-size:0.7rem;">por 1 año</small>
-                    </div>
-                    {% endif %}
-                </div>
-
-                {% if search_result.available and search_result.price and domain_count < domain_limit %}
-                <form method="post" style="margin-top:1rem;">
-                    {% csrf_token %}
-                    <input type="hidden" name="action" value="purchase">
-                    <input type="hidden" name="domain" value="{{ search_result.domain }}">
-                    <button type="submit" class="btn btn-acortar w-100" style="font-size:0.9rem;">
-                        Comprar {{ search_result.domain }} — ${{ search_result.price|floatformat:0 }} ARS
-                    </button>
-                </form>
-                {% elif search_result.available and not search_result.price %}
-                <p style="color:#ffc107; font-size:0.8rem; margin-top:0.75rem; margin-bottom:0;">
-                    Este TLD ({{ search_result.tld }}) no tiene precio configurado. Contactanos para comprarlo.
-                </p>
-                {% elif search_result.available and domain_count >= domain_limit %}
-                <p style="color:#ffc107; font-size:0.8rem; margin-top:0.75rem; margin-bottom:0;">
-                    Alcanzaste el límite de dominios de tu plan.
-                    <a href="{% url 'core:subscribir' %}" style="color:#00ff41;">Upgradear →</a>
-                </p>
-                {% elif not search_result.available %}
-                <p style="color:#ddd; font-size:0.8rem; margin-top:0.75rem; margin-bottom:0;">
-                    Este dominio ya está registrado. Probá con otra extensión (.net, .org, .dev, .app).
-                </p>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <!-- Price table -->
-            <div style="margin-top:1.5rem;">
-                <p style="color:#ddd; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:0.5rem;">Precios por extensión (1 año)</p>
-                <div class="d-flex flex-wrap gap-2">
-                    {% for tld, price in domain_prices.items %}
-                    <span style="background:#0a0a0a; border:1px solid #333; border-radius:6px; padding:0.3rem 0.7rem; color:#ddd; font-size:0.78rem;">
-                        <strong style="color:#00ff41;">{{ tld }}</strong> — ${{ price|floatformat:0 }} ARS
-                    </span>
-                    {% endfor %}
-                </div>
-            </div>
-        </div>
-    </div>
-    -->
+    {% comment %}
+        Tab: Buy — hidden, not offering domain purchases yet.
+        To enable: implement registrar API integration and uncomment this block.
+        Remember to add a tab button in the .edit-tabs container above.
+    {% endcomment %}
 
     <!-- DonWeb affiliate referral (hidden — enable via DONWEB_AFFILIATE_ENABLED=True) -->
     {% if donweb_affiliate_enabled and donweb_affiliate_link %}
@@ -309,9 +230,10 @@
     </div>
     {% endif %}
 
-    <div class="mt-4 text-center">
-        <a href="{% url 'core:perfil' %}" class="console-link">← Volver al perfil</a>
-    </div>
+</div>
+
+<div style="max-width:760px; margin:0 auto;" class="mt-4">
+    <a href="{% url 'core:perfil' %}" class="console-link" style="font-size:0.82rem;">← Volver al perfil</a>
 </div>
 
 {% endblock %}
