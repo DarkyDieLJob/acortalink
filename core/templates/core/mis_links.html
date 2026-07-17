@@ -130,7 +130,7 @@
                     <div class="d-flex gap-1 justify-content-center">
                         <button class="btn btn-sm btn-outline-light" style="font-size:0.7rem;padding:0.15rem 0.4rem;"
                                 data-short-url="{{ request.scheme }}://{{ request.get_host|escapejs }}{% url 'redirect' link.short_code %}"
-                                onclick="navigator.clipboard.writeText(this.dataset.shortUrl); showToast('Copiado');">
+                                onclick="copyToClipboard(this.dataset.shortUrl, 'Link copiado');">
                             Copiar
                         </button>
                         <a href="{% url 'core:editar_link' link.pk %}" class="btn btn-sm btn-outline-info" style="font-size:0.7rem;padding:0.15rem 0.4rem;">

@@ -86,7 +86,7 @@
             </div>
             <div style="background:#111; border:1px solid #333; border-radius:6px; padding:0.5rem 0.75rem; font-family:monospace; font-size:0.85rem; color:#00ff41; display:flex; align-items:center; justify-content:space-between;">
                 <span>{{ cname_target }}</span>
-                <button type="button" onclick="navigator.clipboard.writeText('{{ cname_target }}'); this.textContent='✓'; setTimeout(()=>this.textContent='📋',1500);" style="background:none; border:1px solid #333; border-radius:4px; color:#888; font-size:0.7rem; padding:0.15rem 0.4rem; cursor:pointer;">📋</button>
+                <button type="button" onclick="copyToClipboard('{{ cname_target }}', 'CNAME copiado'); this.textContent='✓'; setTimeout(()=>this.textContent='📋',1500);" style="background:none; border:1px solid #333; border-radius:4px; color:#888; font-size:0.7rem; padding:0.15rem 0.4rem; cursor:pointer;">📋</button>
             </div>
             <p style="margin:0.5rem 0 0 0; color:#888; font-size:0.72rem;">
                 En tu panel de DNS (GoDaddy, Namecheap, DonWeb, etc.) creá un registro CNAME apuntando a la dirección de arriba.

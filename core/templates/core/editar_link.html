@@ -17,7 +17,7 @@
                     <span class="short-code">{{ short_url }}</span>
                 </p>
             </div>
-            <button class="btn btn-sm btn-acortar" onclick="navigator.clipboard.writeText('{{ short_url }}'); showToast('Link copiado');">
+            <button class="btn btn-sm btn-acortar" onclick="copyToClipboard('{{ short_url }}', 'Link copiado');">
                 Copiar link
             </button>
         </div>
