@@ -54,3 +54,5 @@ coverage.xml
 
 # Landing build artifacts (if any)
 landing/node_modules/
+loadtest_results/
+loadtest_*.csv
