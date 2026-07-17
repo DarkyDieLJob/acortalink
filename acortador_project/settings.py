@@ -193,5 +193,11 @@ REGISTRAR_API_URL = os.environ.get('REGISTRAR_API_URL', '')
 REGISTRAR_API_KEY = os.environ.get('REGISTRAR_API_KEY', '')
 REGISTRAR_API_USER = os.environ.get('REGISTRAR_API_USER', '')
 
+# DonWeb affiliate program — referral link for domain purchases
+# Commission: up to USD 10 per referral · Referred user gets 20% OFF first purchase
+# Set DONWEB_AFFILIATE_ENABLED=True to show the referral section in custom domains
+DONWEB_AFFILIATE_LINK = os.environ.get('DONWEB_AFFILIATE_LINK', '')
+DONWEB_AFFILIATE_ENABLED = os.environ.get('DONWEB_AFFILIATE_ENABLED', 'False').lower() in ('true', '1', 'yes')
+
 # Field-level encryption (django-cryptography)
 FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY', '')

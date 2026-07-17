@@ -161,6 +161,25 @@
     </div>
     -->
 
+    <!-- DonWeb affiliate referral (hidden — enable via DONWEB_AFFILIATE_ENABLED=True) -->
+    {% if donweb_affiliate_enabled and donweb_affiliate_link %}
+    <div class="acortalink-form mb-3" style="background:#0d0d0d; border:1px solid #333; border-radius:8px; padding:1rem 1.25rem;">
+        <h5 class="mb-2" style="color:#00ff41;">¿No tenés dominio? Compralo en DonWeb</h5>
+        <p style="color:#ddd; font-size:0.82rem; margin-bottom:0.75rem;">
+            Si todavía no tenés un dominio, podés comprarlo en DonWeb con
+            <strong style="color:#00ff41;">20% OFF en tu primera compra</strong>
+            usando nuestro link de referido. Después agregalo acá arriba y listo.
+        </p>
+        <a href="{{ donweb_affiliate_link }}" target="_blank" rel="nofollow sponsored noopener"
+           class="btn btn-sm btn-acortar" style="text-decoration:none;">
+            Comprar dominio en DonWeb con 20% OFF →
+        </a>
+        <p style="color:#555; font-size:0.65rem; margin-top:0.5rem; margin-bottom:0;">
+            Link de referido. Acortalink puede recibir una comisión por tu compra.
+        </p>
+    </div>
+    {% endif %}
+
     <!-- Domain list -->
     {% if domains %}
     <div class="acortalink-form">

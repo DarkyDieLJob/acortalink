@@ -1557,6 +1557,8 @@ def custom_domains(request):
         'checkout_status': checkout_status,
         'cname_target': getattr(settings, 'CNAME_TARGET', 'app.acortalink.com.ar'),
         'domain_prices': getattr(settings, 'DOMAIN_PRICES', {}),
+        'donweb_affiliate_link': getattr(settings, 'DONWEB_AFFILIATE_LINK', ''),
+        'donweb_affiliate_enabled': getattr(settings, 'DONWEB_AFFILIATE_ENABLED', False),
     })
 
 
