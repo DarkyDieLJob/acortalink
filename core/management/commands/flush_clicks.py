@@ -83,11 +83,14 @@ class Command(BaseCommand):
 
         while True:
             try:
-                raw = cache._cache.lpop(event_key)
+                client = cache._cache.get_client()
+                raw = client.lpop(event_key)
             except (AttributeError, NotImplementedError):
                 break
             if not raw:
                 break
+            if isinstance(raw, bytes):
+                raw = raw.decode('utf-8')
             try:
                 data = json.loads(raw)
             except (json.JSONDecodeError, ValueError):
@@ -149,7 +152,8 @@ class Command(BaseCommand):
     def _get_pending_pks(self, set_key):
         """Obtiene PKs del Redis SET. Retorna None si no soporta SMEMBERS."""
         try:
-            pks = cache.smembers(set_key)
+            client = cache._cache.get_client()
+            pks = client.smembers(set_key)
             return [int(pk) for pk in pks]
         except (AttributeError, NotImplementedError):
             return None

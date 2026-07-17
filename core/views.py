@@ -426,9 +426,10 @@ def _track_click(link_pk):
         cache.set(click_key, 1, timeout=900)
     # Registrar PK en SET para flush_clicks (best-effort, no falla si no soporta)
     try:
-        cache.sadd(getattr(settings, 'CLICK_TRACKING_SET_KEY', 'clicks:pending_pks'), link_pk)
-    except (AttributeError, NotImplementedError):
-        pass  # LocMemCache no soporta sadd — fallback a iteración
+        client = cache._cache.get_client()
+        client.sadd(getattr(settings, 'CLICK_TRACKING_SET_KEY', 'clicks:pending_pks'), link_pk)
+    except (AttributeError, NotImplementedError, Exception):
+        pass  # Fallback: flush_clicks usa legacy mode iterando todos los links
 
 
 def _track_click_event(link_pk, request):
@@ -445,8 +446,9 @@ def _track_click_event(link_pk, request):
         'ref': request.META.get('HTTP_REFERER', '')[:500],
     }
     try:
-        cache._cache.rpush(event_key, json.dumps(event))
-    except (AttributeError, NotImplementedError):
+        client = cache._cache.get_client()
+        client.rpush(event_key, json.dumps(event))
+    except (AttributeError, NotImplementedError, Exception):
         pass
 
 

@@ -83,7 +83,7 @@ services:
         condition: service_healthy
     command: >
       sh -c "uv sync --frozen --no-dev &&
-             printf '0 3 * * * cd /app && python manage.py cleanup_expired_links >> /var/log/cron_cleanup.log 2>&1\\n*/30 * * * * cd /app && python manage.py ping_seo >> /var/log/cron_ping.log 2>&1\\n*/5 * * * * cd /app && python manage.py flush_clicks >> /var/log/cron_flush.log 2>&1\\n' > /tmp/crontab.txt &&
+             printf '0 3 * * * cd /app && /app/.venv/bin/python manage.py cleanup_expired_links >> /var/log/cron_cleanup.log 2>&1\\n*/30 * * * * cd /app && /app/.venv/bin/python manage.py ping_seo >> /var/log/cron_ping.log 2>&1\\n*/5 * * * * cd /app && /app/.venv/bin/python manage.py flush_clicks >> /var/log/cron_flush.log 2>&1\\n' > /tmp/crontab.txt &&
              crontab /tmp/crontab.txt &&
              cron -f -L 2"
 
