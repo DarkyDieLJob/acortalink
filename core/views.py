@@ -1749,3 +1749,13 @@ def _generate_xlsx(results, is_premium=False):
     )
     response['Content-Disposition'] = 'attachment; filename="links_acortados.xlsx"'
     return response
+
+
+@login_required
+def staff_dashboard(request):
+    """Dashboard interno de monitoring para staff."""
+    if not request.user.is_staff:
+        return redirect('core:index')
+    return render(request, 'core/staff_dashboard.html', {
+        'is_premium': _is_premium(request.user),
+    })

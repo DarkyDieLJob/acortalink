@@ -404,6 +404,9 @@
                 {% if is_premium %}
                     <a href="{% url 'core:bulk' %}" class="nav-link">Bulk CSV</a>
                 {% endif %}
+                {% if user.is_staff %}
+                <a href="{% url 'core:staff_dashboard' %}" class="nav-link" title="Panel interno" style="opacity:0.4;font-size:0.7rem;">⚙</a>
+                {% endif %}
                 <div class="dropdown">
                     <button class="dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                         <span class="user-badge">{{ user.username|first|upper }}</span>{{ user.username }}

@@ -1,0 +1,381 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block meta_title %}Staff Dashboard — Acortalink{% endblock %}
+{% block meta_robots %}noindex, nofollow{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+.staff-dashboard { padding: 1rem 0; }
+.staff-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 1.5rem;
+}
+.staff-header h1 {
+    font-size: 1.4rem; color: #00ff41; margin: 0;
+}
+.staff-header h1::before { content: '> '; color: #00ff41; }
+.staff-refresh {
+    background: #111; border: 1px solid #333; color: #ddd;
+    padding: 0.4rem 1rem; border-radius: 6px; cursor: pointer;
+    font-size: 0.8rem; transition: all 0.15s;
+}
+.staff-refresh:hover { border-color: #00ff41; color: #00ff41; }
+
+.stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.stat-card {
+    background: #111; border: 1px solid #222; border-radius: 10px;
+    padding: 1.2rem; transition: border-color 0.2s;
+}
+.stat-card:hover { border-color: #333; }
+.stat-card .stat-label {
+    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: #888; margin-bottom: 0.4rem;
+}
+.stat-card .stat-value {
+    font-size: 1.8rem; font-weight: 700; color: #00ff41;
+}
+.stat-card .stat-sub {
+    font-size: 0.7rem; color: #666; margin-top: 0.3rem;
+}
+.stat-card.warn .stat-value { color: #ffc107; }
+.stat-card.danger .stat-value { color: #dc3545; }
+.stat-card.info .stat-value { color: #17a2b8; }
+
+.chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+@media (max-width: 767px) { .chart-grid { grid-template-columns: 1fr; } }
+.chart-card {
+    background: #111; border: 1px solid #222; border-radius: 10px;
+    padding: 1.2rem;
+}
+.chart-card h3 {
+    font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: #888; margin-bottom: 1rem;
+}
+.chart-card canvas { max-height: 240px; }
+
+.table-card {
+    background: #111; border: 1px solid #222; border-radius: 10px;
+    padding: 1.2rem; margin-bottom: 1.5rem;
+}
+.table-card h3 {
+    font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: #888; margin-bottom: 1rem;
+}
+.table-card table { width: 100%; font-size: 0.8rem; }
+.table-card th { color: #888; text-align: left; padding: 0.5rem; border-bottom: 1px solid #222; }
+.table-card td { color: #ddd; padding: 0.5rem; border-bottom: 1px solid #1a1a1a; }
+.table-card tr:hover td { background: #1a1a1a; }
+.table-card .mono { color: #00ff41; font-weight: 700; }
+
+.health-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem; margin-bottom: 1.5rem;
+}
+@media (max-width: 767px) { .health-grid { grid-template-columns: 1fr; } }
+.health-card {
+    background: #111; border: 1px solid #222; border-radius: 10px;
+    padding: 1.2rem;
+}
+.health-card h3 {
+    font-size: 0.8rem; text-transform: uppercase; color: #888; margin-bottom: 0.8rem;
+}
+.health-card .health-row {
+    display: flex; justify-content: space-between;
+    padding: 0.4rem 0; border-bottom: 1px solid #1a1a1a;
+    font-size: 0.8rem;
+}
+.health-card .health-row:last-child { border-bottom: none; }
+.health-card .health-key { color: #888; }
+.health-card .health-val { color: #ddd; font-weight: 700; }
+.health-card .health-ok { color: #00ff41; }
+.health-card .health-err { color: #dc3545; }
+
+.loading { color: #555; text-align: center; padding: 2rem; font-size: 0.85rem; }
+</style>
+{% endblock %}
+
+{% block acortador_content %}
+<div class="staff-dashboard">
+    <div class="staff-header">
+        <h1>Staff Dashboard</h1>
+        <button class="staff-refresh" onclick="loadAll()">↻ Refresh</button>
+    </div>
+
+    <div class="stat-grid" id="stat-grid">
+        <div class="loading">Cargando métricas...</div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="chart-card">
+            <h3>Signups (30 días)</h3>
+            <canvas id="chart-signups"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Links creados (30 días)</h3>
+            <canvas id="chart-links"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Clicks diarios (30 días)</h3>
+            <canvas id="chart-clicks"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Clicks por dispositivo</h3>
+            <canvas id="chart-devices"></canvas>
+        </div>
+    </div>
+
+    <div class="health-grid" id="health-grid">
+        <div class="loading">Cargando health...</div>
+    </div>
+
+    <div class="chart-grid">
+        <div class="table-card">
+            <h3>Top 20 links por clicks</h3>
+            <div id="top-links"><div class="loading">Cargando...</div></div>
+        </div>
+        <div class="table-card">
+            <h3>Usuarios recientes</h3>
+            <div id="recent-users"><div class="loading">Cargando...</div></div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <h3>Subscripciones recientes</h3>
+        <div id="recent-subs"><div class="loading">Cargando...</div></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const API_BASE = '{% if request.META.HTTP_X_FORWARDED_FOR %}/app{% endif %}/api/internal/';
+
+let charts = {};
+
+function fmtNum(n) {
+    if (n === null || n === undefined) return '—';
+    return n.toLocaleString('es-AR');
+}
+
+function fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+
+function fmtDateTime(d) {
+    if (!d) return '—';
+    return new Date(d).toLocaleString('es-AR', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+}
+
+async function fetchJSON(url) {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    return resp.json();
+}
+
+function makeLineChart(canvasId, labels, data, label, color) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+    if (charts[canvasId]) charts[canvasId].destroy();
+    charts[canvasId] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: label,
+                data: data,
+                borderColor: color,
+                backgroundColor: color + '20',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 0,
+                borderWidth: 2,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: {
+                    ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 8 },
+                    grid: { color: '#1a1a1a' }
+                },
+                y: {
+                    ticks: { color: '#555', font: { size: 9 } },
+                    grid: { color: '#1a1a1a' },
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function makeDoughnutChart(canvasId, labels, data, colors) {
+    const ctx = document.getElementById(canvasId);
+    if (!ctx) return;
+    if (charts[canvasId]) charts[canvasId].destroy();
+    charts[canvasId] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderWidth: 0,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#888', font: { size: 10 } }
+                }
+            }
+        }
+    });
+}
+
+async function loadOverview() {
+    const d = await fetchJSON(API_BASE + 'overview/');
+    const grid = document.getElementById('stat-grid');
+    grid.innerHTML = `
+        <div class="stat-card"><div class="stat-label">Usuarios totales</div><div class="stat-value">${fmtNum(d.users.total)}</div><div class="stat-sub">${d.users.active_24h} activos 24h · ${d.users.new_7d} nuevos 7d</div></div>
+        <div class="stat-card"><div class="stat-label">Links totales</div><div class="stat-value">${fmtNum(d.links.total)}</div><div class="stat-sub">${d.links.new_24h} nuevos 24h</div></div>
+        <div class="stat-card info"><div class="stat-label">Clicks totales</div><div class="stat-value">${fmtNum(d.clicks.total)}</div><div class="stat-sub">${d.clicks.events_24h} eventos 24h · ${d.clicks.events_7d} en 7d</div></div>
+        <div class="stat-card ${d.subscriptions.active > 0 ? '' : 'warn'}"><div class="stat-label">Subs activas</div><div class="stat-value">${fmtNum(d.subscriptions.active)}</div></div>
+        <div class="stat-card ${d.reports.pending > 0 ? 'danger' : ''}"><div class="stat-label">Reportes pendientes</div><div class="stat-value">${fmtNum(d.reports.pending)}</div></div>
+    `;
+}
+
+async function loadUsers() {
+    const d = await fetchJSON(API_BASE + 'users/');
+    const labels = d.daily_signups.map(s => s.date.slice(5));
+    const data = d.daily_signups.map(s => s.count);
+    makeLineChart('chart-signups', labels, data, 'Signups', '#00ff41');
+
+    const tbody = document.getElementById('recent-users');
+    if (!d.recent_users.length) {
+        tbody.innerHTML = '<div class="loading">Sin usuarios</div>';
+        return;
+    }
+    let html = '<table><thead><tr><th>Usuario</th><th>Email</th><th>Registro</th><th>Estado</th></tr></thead><tbody>';
+    d.recent_users.forEach(u => {
+        html += `<tr><td class="mono">${u.username}</td><td>${u.email||'—'}</td><td>${fmtDate(u.date_joined)}</td><td>${u.is_active ? '✓' : '✕'}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    tbody.innerHTML = html;
+}
+
+async function loadLinks() {
+    const d = await fetchJSON(API_BASE + 'links/');
+    const labels = d.daily_links.map(s => s.date.slice(5));
+    const data = d.daily_links.map(s => s.count);
+    makeLineChart('chart-links', labels, data, 'Links', '#17a2b8');
+
+    const el = document.getElementById('top-links');
+    if (!d.top_links.length) {
+        el.innerHTML = '<div class="loading">Sin links</div>';
+        return;
+    }
+    let html = '<table><thead><tr><th>Código</th><th>Clicks</th><th>Tipo</th><th>Creado</th></tr></thead><tbody>';
+    d.top_links.forEach(l => {
+        html += `<tr><td class="mono">${l.short_code}</td><td>${fmtNum(l.clicks)}</td><td>${l.is_premium ? 'PRO' : 'Free'}</td><td>${fmtDate(l.creado)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+async function loadClicks() {
+    const d = await fetchJSON(API_BASE + 'clicks/');
+    const labels = d.daily_clicks.map(s => s.date.slice(5));
+    const data = d.daily_clicks.map(s => s.count);
+    makeLineChart('chart-clicks', labels, data, 'Clicks', '#ffc107');
+
+    const deviceLabels = d.by_device.map(e => e.device || 'other');
+    const deviceData = d.by_device.map(e => e.count);
+    const deviceColors = ['#00ff41', '#17a2b8', '#ffc107', '#dc3545', '#666'];
+    makeDoughnutChart('chart-devices', deviceLabels, deviceData, deviceColors);
+}
+
+async function loadSubscriptions() {
+    const d = await fetchJSON(API_BASE + 'subscriptions/');
+    const el = document.getElementById('recent-subs');
+    if (!d.recent_subscriptions.length) {
+        el.innerHTML = '<div class="loading">Sin subscripciones</div>';
+        return;
+    }
+    let html = '<table><thead><tr><th>Usuario</th><th>Plan</th><th>Estado</th><th>Provider</th><th>Inicio</th></tr></thead><tbody>';
+    d.recent_subscriptions.forEach(s => {
+        html += `<tr><td class="mono">${s.user__username}</td><td>${s.plan}</td><td>${s.status}</td><td>${s.provider}</td><td>${fmtDate(s.fecha_inicio)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+async function loadHealth() {
+    const d = await fetchJSON(API_BASE + 'health/');
+    const grid = document.getElementById('health-grid');
+
+    const redisClass = d.redis.ok ? 'health-ok' : 'health-err';
+    const dbClass = d.database.ok ? 'health-ok' : 'health-err';
+
+    grid.innerHTML = `
+        <div class="health-card">
+            <h3>Redis</h3>
+            <div class="health-row"><span class="health-key">Estado</span><span class="health-val ${redisClass}">${d.redis.ok ? 'OK' : 'ERROR'}</span></div>
+            <div class="health-row"><span class="health-key">Clientes</span><span class="health-val">${d.redis.connected_clients ?? '—'}</span></div>
+            <div class="health-row"><span class="health-key">Memoria</span><span class="health-val">${d.redis.used_memory_human ?? '—'}</span></div>
+            <div class="health-row"><span class="health-key">Comandos</span><span class="health-val">${fmtNum(d.redis.total_commands_processed) ?? '—'}</span></div>
+            <div class="health-row"><span class="health-key">Uptime</span><span class="health-val">${d.redis.uptime_in_seconds ? Math.round(d.redis.uptime_in_seconds/3600) + 'h' : '—'}</span></div>
+            ${d.redis.error ? `<div class="health-row"><span class="health-key">Error</span><span class="health-val health-err">${d.redis.error}</span></div>` : ''}
+        </div>
+        <div class="health-card">
+            <h3>PostgreSQL</h3>
+            <div class="health-row"><span class="health-key">Estado</span><span class="health-val ${dbClass}">${d.database.ok ? 'OK' : 'ERROR'}</span></div>
+            <div class="health-row"><span class="health-key">Conexiones</span><span class="health-val">${d.database.total_connections ?? '—'} / ${d.database.max_connections ?? '—'}</span></div>
+            <div class="health-row"><span class="health-key">Activas</span><span class="health-val">${d.database.active_connections ?? '—'}</span></div>
+            ${d.database.error ? `<div class="health-row"><span class="health-key">Error</span><span class="health-val health-err">${d.database.error}</span></div>` : ''}
+        </div>
+        <div class="health-card">
+            <h3>Sistema</h3>
+            <div class="health-row"><span class="health-key">Mantenimiento</span><span class="health-val ${d.maintenance_mode ? 'health-err' : 'health-ok'}">${d.maintenance_mode ? 'ACTIVO' : 'OFF'}</span></div>
+            <div class="health-row"><span class="health-key">Debug</span><span class="health-val ${d.debug ? 'health-err' : 'health-ok'}">${d.debug ? 'ON' : 'OFF'}</span></div>
+            <div class="health-row"><span class="health-key">Clicks pendientes</span><span class="health-val">${fmtNum(d.pending_clicks_in_redis)}</span></div>
+        </div>
+    `;
+}
+
+async function loadAll() {
+    try {
+        await Promise.all([
+            loadOverview(),
+            loadUsers(),
+            loadLinks(),
+            loadClicks(),
+            loadSubscriptions(),
+            loadHealth(),
+        ]);
+    } catch(e) {
+        console.error('Dashboard load error:', e);
+    }
+}
+
+loadAll();
+setInterval(loadAll, 30000);
+</script>
+{% endblock %}

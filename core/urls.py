@@ -33,4 +33,5 @@ urlpatterns = [
     path('api-keys/', views.api_keys, name='api_keys'),
     path('api/v1/', include(api_urls)),
     path('api/internal/', include(internal_urls)),
+    path('staff/', views.staff_dashboard, name='staff_dashboard'),
 ]
