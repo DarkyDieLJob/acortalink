@@ -160,6 +160,7 @@
                         <th>Tipo</th>
                         <th class="text-center">Links</th>
                         <th>Estado</th>
+                        <th class="text-center">QR</th>
                         <th class="text-end">Acciones</th>
                     </tr>
                 </thead>
@@ -191,6 +192,16 @@
                             {% elif d.status == 'failed' %}
                                 <span style="color:#dc3545; font-size:0.8rem;">● Fallido</span>
                             {% endif %}
+                        </td>
+                        <td class="text-center" style="padding:0.4rem;">
+                            <div class="qr-thumb" 
+                                 data-domain="{{ d.domain }}" 
+                                 data-url="https://{{ d.domain }}/"
+                                 style="width:44px; height:44px; border:1px solid #333; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; background:#fff; transition:border-color 0.15s;"
+                                 onmouseover="this.style.borderColor='#00ff41';"
+                                 onmouseout="this.style.borderColor='#333';"
+                                 onclick="openQRModal('{{ d.domain }}', 'https://{{ d.domain }}/')">
+                            </div>
                         </td>
                         <td class="text-end">
                             <div class="d-flex gap-1 flex-wrap justify-content-end">
@@ -235,5 +246,110 @@
 <div style="max-width:760px; margin:0 auto;" class="mt-4">
     <a href="{% url 'core:perfil' %}" class="console-link" style="font-size:0.82rem;">← Volver al perfil</a>
 </div>
+
+<!-- QR Modal -->
+<div id="qrModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:center; justify-content:center;" onclick="if(event.target===this)closeQRModal()">
+    <div style="background:#111; border:1px solid #333; border-radius:16px; padding:2rem; max-width:340px; width:90%; text-align:center;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+            <h5 id="qrModalTitle" style="color:#00ff41; margin:0; font-size:1rem;">QR del dominio</h5>
+            <button type="button" onclick="closeQRModal()" style="background:none; border:none; color:#888; font-size:1.3rem; cursor:pointer; padding:0; line-height:1;">✕</button>
+        </div>
+        <div id="qrModalCanvas" style="background:#fff; border-radius:12px; padding:1rem; display:inline-block; margin-bottom:1.25rem;"></div>
+        <div id="qrModalUrl" style="color:#888; font-size:0.75rem; margin-bottom:1.25rem; word-break:break-all;"></div>
+        <div class="d-flex gap-2 justify-content-center">
+            <button type="button" id="qrDownloadBtn" class="btn btn-sm btn-acortar" style="font-size:0.8rem;">⬇ Descargar PNG</button>
+            <button type="button" onclick="closeQRModal()" class="btn btn-sm" style="background:#222; color:#ddd; border:1px solid #444; font-size:0.8rem;">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
+<script>
+(function() {
+    // Generate thumbnails for all domains
+    document.querySelectorAll('.qr-thumb').forEach(function(el) {
+        var url = el.dataset.url;
+        try {
+            var qr = qrcode(0, 'M');
+            qr.addData(url);
+            qr.make();
+            el.innerHTML = qr.createSvgTag({ cellSize: 2, margin: 1, scalable: true });
+            var svg = el.querySelector('svg');
+            if (svg) { svg.style.width = '40px'; svg.style.height = '40px'; }
+        } catch(e) {
+            el.textContent = 'QR';
+            el.style.color = '#888';
+            el.style.fontSize = '0.6rem';
+        }
+    });
+})();
+
+var qrModal = document.getElementById('qrModal');
+var qrModalCanvas = document.getElementById('qrModalCanvas');
+var qrModalUrl = document.getElementById('qrModalUrl');
+var qrModalTitle = document.getElementById('qrModalTitle');
+var qrDownloadBtn = document.getElementById('qrDownloadBtn');
+var currentQRDataUrl = '';
+
+function openQRModal(domain, url) {
+    qrModalTitle.textContent = 'QR — ' + domain;
+    qrModalUrl.textContent = url;
+    qrModalCanvas.innerHTML = '';
+    
+    // Generate large QR as canvas for download
+    try {
+        var qr = qrcode(0, 'M');
+        qr.addData(url);
+        qr.make();
+        // SVG for display
+        var svgTag = qr.createSvgTag({ cellSize: 5, margin: 2, scalable: true });
+        qrModalCanvas.innerHTML = svgTag;
+        var svg = qrModalCanvas.querySelector('svg');
+        if (svg) { svg.style.width = '220px'; svg.style.height = '220px'; }
+        
+        // Canvas for PNG download
+        var count = qr.getModuleCount();
+        var cellSize = 5;
+        var margin = 2;
+        var size = (count + margin * 2) * cellSize;
+        var canvas = document.createElement('canvas');
+        canvas.width = size;
+        canvas.height = size;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = '#000';
+        for (var r = 0; r < count; r++) {
+            for (var c = 0; c < count; c++) {
+                if (qr.isDark(r, c)) {
+                    ctx.fillRect((c + margin) * cellSize, (r + margin) * cellSize, cellSize, cellSize);
+                }
+            }
+        }
+        currentQRDataUrl = canvas.toDataURL('image/png');
+    } catch(e) {
+        qrModalCanvas.innerHTML = '<p style="color:#888; font-size:0.8rem;">Error generando QR</p>';
+        currentQRDataUrl = '';
+    }
+    
+    qrModal.style.display = 'flex';
+}
+
+function closeQRModal() {
+    qrModal.style.display = 'none';
+}
+
+qrDownloadBtn.addEventListener('click', function() {
+    if (!currentQRDataUrl) return;
+    var a = document.createElement('a');
+    a.href = currentQRDataUrl;
+    a.download = 'qr-dominio.png';
+    a.click();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeQRModal();
+});
+</script>
 
 {% endblock %}
