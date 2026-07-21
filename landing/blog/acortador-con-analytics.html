@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Acortador de links con analytics: guía 2026 | Acortalink</title>
+<meta name="description" content="Acortador de links con analytics de clicks, geolocalización, dispositivo y referrer. Tracking en tiempo real. Acortalink: analytics desde $4.900 ARS/mes con MercadoPago.">
+<meta name="keywords" content="acortador con analytics, acortador de links con analytics, tracking clicks links, analytics url shortener, acortador links tracking, medir clicks link">
+<link rel="canonical" href="https://acortalink.com.ar/blog/acortador-con-analytics.html">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/blog/style.css">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Acortador de links con analytics: guía 2026">
+<meta property="og:description" content="Analytics de clicks, geo, dispositivo y referrer. Tracking en tiempo real.">
+<meta property="og:url" content="https://acortalink.com.ar/blog/acortador-con-analytics.html">
+<meta property="og:site_name" content="Acortalink">
+<meta property="og:locale" content="es_AR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Acortador de links con analytics: guía 2026">
+<meta name="twitter:description" content="Analytics de clicks, geo, dispositivo y referrer.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"Acortador de links con analytics: guía 2026","description":"Acortador de links con analytics de clicks, geolocalización, dispositivo y referrer. Tracking en tiempo real.","author":{"@type":"Organization","name":"Acortalink"},"publisher":{"@type":"Organization","name":"Acortalink"},"datePublished":"2026-01-15","url":"https://acortalink.com.ar/blog/acortador-con-analytics.html"}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿Qué acortadores de links tienen analytics?","acceptedAnswer":{"@type":"Answer","text":"Acortalink incluye analytics de clicks, geolocalización, dispositivo, browser y referrer desde el plan Starter ($4.900 ARS/mes). Bitly incluye analytics desde $10 USD/mes. TinyURL no incluye analytics en ningún plan."}},{"@type":"Question","name":"¿Puedo ver desde qué país hacen click en mi link?","acceptedAnswer":{"@type":"Answer","text":"Sí. Acortalink incluye geolocalización por país en todos los planes pagos. Podés ver cuántos clicks vienen de Argentina, México, Brasil, etc."}},{"@type":"Question","name":"¿Puedo exportar los analytics de mis links?","acceptedAnswer":{"@type":"Answer","text":"Sí. El plan Business de Acortalink ($28.000 ARS/mes) incluye export CSV de todos los analytics. Los planes Starter y Pro incluyen visualización en el dashboard."}},{"@type":"Question","name":"¿Los analytics son en tiempo real?","acceptedAnswer":{"@type":"Answer","text":"Acortalink usa Redis INCR para contar clicks en tiempo real. Los eventos detallados (geo, device, referrer) se guardan en batch cada 5 minutos. El contador de clicks se actualiza instantáneamente."}}]}
+</script>
+</head>
+<body>
+
+<nav class="navbar">
+<div class="container">
+<a href="/" class="brand">⚡ Acortalink</a>
+<div class="nav-links">
+<a href="/">Inicio</a>
+<a href="/#pricing">Planes</a>
+<a href="/blog/">Blog</a>
+<a href="https://app.acortalink.com.ar/registrar/" class="btn-sm">Registrarse</a>
+</div>
+</div>
+</nav>
+
+<div class="container">
+<article>
+<h1>Acortador de links con analytics: guía 2026</h1>
+<p class="meta">Actualizado enero 2026 · 4 min de lectura</p>
+
+<p>Acortar un link sin medirlo es como manejar con los ojos cerrados. Si compartís links en WhatsApp, Instagram, email o flyers, necesitás saber cuántos clicks reciben, desde dónde y qué dispositivo usan. Acá te explico qué buscar en un <strong>acortador de links con analytics</strong>.</p>
+
+<h2>Qué métricas importan en un acortador</h2>
+
+<h3>Clicks totales</h3>
+<p>La métrica básica. Cuánta gente hizo click en tu link. Simple pero esencial.</p>
+
+<h3>Clicks por día</h3>
+<p>Ver cuándo recibís más clicks. ¿Los martes? ¿Los fines de semana? Te ayuda a saber cuándo publicar.</p>
+
+<h3>Geolocalización</h3>
+<p>Desde qué país o ciudad hacen click. Si vendés en LATAM, saber si tus clicks vienen de Argentina, México o Brasil cambia tu estrategia.</p>
+
+<h3>Dispositivo</h3>
+<p>Mobile, desktop o tablet. Si el 80% de tus clicks son mobile, tu destino tiene que estar optimizado para mobile.</p>
+
+<h3>Referrer</h3>
+<p>Desde dónde viene el click. WhatsApp, Instagram, Google, directo. Te dice qué canal funciona mejor.</p>
+
+<h3>Time series (Pro)</h3>
+<p>Ver la evolución de clicks a lo largo del tiempo. Tendencias, picos, estacionalidad.</p>
+
+<h2>Analytics en Acortalink</h2>
+
+<table>
+<thead><tr><th>Métrica</th><th>Free</th><th>Starter</th><th>Pro</th><th>Business</th></tr></thead>
+<tbody>
+<tr><td>Clicks totales</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+<tr><td>Clicks por día</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+<tr><td>Geolocalización</td><td class="cross">-</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+<tr><td>Dispositivo</td><td class="cross">-</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+<tr><td>Referrer</td><td class="cross">-</td><td class="check">✓</td><td class="check">✓</td><td class="check">✓</td></tr>
+<tr><td>Time series</td><td class="cross">-</td><td class="cross">-</td><td class="check">✓</td><td class="check">✓</td></tr>
+<tr><td>Export CSV</td><td class="cross">-</td><td class="cross">-</td><td class="cross">-</td><td class="check">✓</td></tr>
+</tbody>
+</table>
+
+<h2>Cómo funciona el tracking en Acortalink</h2>
+
+<p>El tracking no debería agregar latencia a tus redirects. Acortalink lo resuelve así:</p>
+
+<ol>
+<li><strong>Click en el link corto</strong></li>
+<li><strong>Redis cache</strong> busca la URL de destino (99% cache hit, 0 queries a la DB)</li>
+<li><strong>Redirect 302 instantáneo</strong> — la persona llega al destino sin esperar</li>
+<li><strong>Click tracking async</strong> — <code>Redis INCR</code> para el contador + <code>SADD</code> para el evento detallado</li>
+<li><strong>Batch flush</strong> — cada 5 minutos, los eventos se guardan en PostgreSQL</li>
+</ol>
+
+<p>El redirect no espera al tracking. Es fire-and-forget. La persona llega al destino instantáneamente, y el click se registra en segundo plano.</p>
+
+<h2>Comparativa de analytics en acortadores</h2>
+
+<table>
+<thead><tr><th>Acortador</th><th>Analytics</th><th>Geo</th><th>Device</th><th>Export</th><th>Precio</th></tr></thead>
+<tbody>
+<tr><td><strong>Acortalink</strong></td><td class="check">Clicks + geo + device</td><td class="check">✓</td><td class="check">✓</td><td class="check">CSV (Business)</td><td class="check">$4.900 ARS</td></tr>
+<tr><td>Bitly</td><td class="check">Clicks + geo</td><td class="check">✓</td><td class="check">✓</td><td class="check">Premium</td><td class="cross">$10-199 USD</td></tr>
+<tr><td>Short.io</td><td class="check">Clicks + geo</td><td class="check">✓</td><td class="check">✓</td><td class="cross">No</td><td>$5 USD</td></tr>
+<tr><td>TinyURL</td><td class="cross">No</td><td class="cross">No</td><td class="cross">No</td><td class="cross">No</td><td class="cross">$9.99 USD</td></tr>
+</tbody>
+</table>
+
+<h2>Cómo usar analytics para mejorar tus campañas</h2>
+
+<h3>1. Compará canales</h3>
+<p>Creá links diferentes para cada canal: <code>links.tuempresa.com/wpp</code> para WhatsApp, <code>links.tuempresa.com/ig</code> para Instagram. Compará cuál genera más clicks.</p>
+
+<h3>2. Medí por horario</h3>
+<p>Si ves que la mayoría de tus clicks son entre las 18h y 22h, publicá a esa hora. Los analytics por día te muestran los picos.</p>
+
+<h3>3. Optimizá para mobile</h3>
+<p>Si el 80% de tus clicks son mobile, asegurate de que tu destino esté optimizado para mobile. Página lenta en mobile = bounce.</p>
+
+<h3>4. Detectá tráfico bots</h3>
+<p>Los analytics de Acortalink marcan los clicks de bots por separado. Si ves 1.000 clicks pero 800 son bots, tu campaña real generó 200 clicks humanos.</p>
+
+<div class="cta-box">
+<h3>Medí cada click de tus links</h3>
+<p>Analytics con geo, device y referrer · Desde $4.900 ARS/mes con MercadoPago</p>
+<a href="https://app.acortalink.com.ar/registrar/" class="cta-btn">Crear cuenta →</a>
+</div>
+
+<h2>Preguntas frecuentes</h2>
+
+<details class="faq-item"><summary>¿Qué acortadores de links tienen analytics?</summary><div class="answer">Acortalink incluye analytics de clicks, geolocalización, dispositivo, browser y referrer desde el plan Starter ($4.900 ARS/mes). Bitly incluye analytics desde $10 USD/mes. TinyURL no incluye analytics en ningún plan.</div></details>
+
+<details class="faq-item"><summary>¿Puedo ver desde qué país hacen click en mi link?</summary><div class="answer">Sí. Acortalink incluye geolocalización por país en todos los planes pagos. Podés ver cuántos clicks vienen de Argentina, México, Brasil, etc.</div></details>
+
+<details class="faq-item"><summary>¿Puedo exportar los analytics de mis links?</summary><div class="answer">Sí. El plan Business de Acortalink ($28.000 ARS/mes) incluye export CSV de todos los analytics. Los planes Starter y Pro incluyen visualización en el dashboard.</div></details>
+
+<details class="faq-item"><summary>¿Los analytics son en tiempo real?</summary><div class="answer">Acortalink usa Redis INCR para contar clicks en tiempo real. Los eventos detallados (geo, device, referrer) se guardan en batch cada 5 minutos. El contador de clicks se actualiza instantáneamente.</div></details>
+
+</article>
+</div>
+
+<footer class="footer">
+<div class="container">
+<p>⚡ Acortalink — <a href="/">Acortador de links</a> con SEO y dominios propios</p>
+<p><a href="/">Inicio</a> · <a href="/#pricing">Planes</a> · <a href="/blog/">Blog</a> · <a href="https://app.acortalink.com.ar/registrar/">Registrarse</a></p>
+<p>© 2025 Acortalink · Hecho en Argentina 🇦🇷</p>
+</div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Acortador de links con API REST: guía para devs 2026 | Acortalink</title>
+<meta name="description" content="API REST para acortar links programáticamente. Creá, editá y eliminá links via API. Rate limiting por plan. Acortalink: API desde $4.900 ARS/mes con MercadoPago.">
+<meta name="keywords" content="acortador con api, api acortador de links, url shortener api, api rest acortador, acortador links programatico, api acortar url">
+<link rel="canonical" href="https://acortalink.com.ar/blog/acortador-con-api.html">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/blog/style.css">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Acortador de links con API REST: guía para devs 2026">
+<meta property="og:description" content="API REST para acortar links. Creá, editá y eliminá links via API.">
+<meta property="og:url" content="https://acortalink.com.ar/blog/acortador-con-api.html">
+<meta property="og:site_name" content="Acortalink">
+<meta property="og:locale" content="es_AR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Acortador de links con API REST: guía para devs 2026">
+<meta name="twitter:description" content="API REST para acortar links programáticamente.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"Acortador de links con API REST: guía para devs 2026","description":"API REST para acortar links programáticamente. Creá, editá y eliminá links via API. Rate limiting por plan.","author":{"@type":"Organization","name":"Acortalink"},"publisher":{"@type":"Organization","name":"Acortalink"},"datePublished":"2026-01-15","url":"https://acortalink.com.ar/blog/acortador-con-api.html"}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿Qué acortadores de links tienen API REST?","acceptedAnswer":{"@type":"Answer","text":"Acortalink incluye API REST desde el plan Starter ($4.900 ARS/mes) con 1.000 requests/mes. Bitly incluye API desde $29 USD/mes. Dub.co incluye API desde ~$90 USD/mes. TinyURL no tiene API."}},{"@type":"Question","name":"¿Cómo autenticar la API de Acortalink?","acceptedAnswer":{"@type":"Answer","text":"La API usa autenticación via header X-API-Key. Generá tu API key desde el dashboard en la sección 'API Keys'. Cada request debe incluir el header 'X-API-Key: tu-key-aqui'."}},{"@type":"Question","name":"¿Cuánto cuesta la API de Acortalink?","acceptedAnswer":{"@type":"Answer","text":"La API está incluida en todos los planes pagos: Starter (1.000 req/mes, $4.900 ARS), Pro (5.000 req/mes, $9.800 ARS) y Business (25.000 req/mes + webhooks, $28.000 ARS)."}},{"@type":"Question","name":"¿La API tiene rate limiting?","acceptedAnswer":{"@type":"Answer","text":"Sí. El rate limiting es mensual: 1.000 requests en Starter, 5.000 en Pro y 25.000 en Business. Cuando alcanzás el límite, la API devuelve HTTP 429 con headers X-RateLimit-Limit y X-RateLimit-Used."}}]}
+</script>
+</head>
+<body>
+
+<nav class="navbar">
+<div class="container">
+<a href="/" class="brand">⚡ Acortalink</a>
+<div class="nav-links">
+<a href="/">Inicio</a>
+<a href="/#pricing">Planes</a>
+<a href="/blog/">Blog</a>
+<a href="https://app.acortalink.com.ar/registrar/" class="btn-sm">Registrarse</a>
+</div>
+</div>
+</nav>
+
+<div class="container">
+<article>
+<h1>Acortador de links con API REST: guía para devs 2026</h1>
+<p class="meta">Actualizado enero 2026 · 5 min de lectura</p>
+
+<p>Si estás construyendo una app, un bot, o cualquier sistema que necesite generar links cortos programáticamente, necesitás un acortador con API REST. Acá te muestro qué endpoints ofrece Acortalink, cómo autenticar y cuánto cuesta.</p>
+
+<h2>Endpoints de la API</h2>
+
+<table>
+<thead><tr><th>Método</th><th>Endpoint</th><th>Descripción</th></tr></thead>
+<tbody>
+<tr><td><code>POST</code></td><td><code>/api/v1/links/</code></td><td>Crear link acortado</td></tr>
+<tr><td><code>GET</code></td><td><code>/api/v1/links/</code></td><td>Listar links del usuario</td></tr>
+<tr><td><code>GET</code></td><td><code>/api/v1/links/&lt;code&gt;/</code></td><td>Detalle de un link</td></tr>
+<tr><td><code>DELETE</code></td><td><code>/api/v1/links/&lt;code&gt;/</code></td><td>Eliminar link</td></tr>
+<tr><td><code>GET</code></td><td><code>/api/v1/stats/&lt;code&gt;/</code></td><td>Analytics de un link</td></tr>
+<tr><td><code>POST</code></td><td><code>/api/v1/keys/</code></td><td>Crear API key</td></tr>
+<tr><td><code>GET</code></td><td><code>/api/v1/keys/</code></td><td>Listar API keys</td></tr>
+</tbody>
+</table>
+
+<h2>Autenticación</h2>
+
+<p>La API usa header <code>X-API-Key</code>. Generá tu key desde el dashboard:</p>
+
+<pre><code>curl -X POST https://app.acortalink.com.ar/api/v1/links/ \
+  -H "X-API-Key: tu-api-key-aqui" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://ejemplo.com/pagina-muy-larga"}'</code></pre>
+
+<p>Respuesta:</p>
+
+<pre><code>{
+  "link": {
+    "short_code": "abc123",
+    "short_url": "https://app.acortalink.com.ar/s/abc123/",
+    "original_url": "https://ejemplo.com/pagina-muy-larga",
+    "is_premium": true,
+    "clicks": 0,
+    "has_seo": false,
+    "has_password": false,
+    "created_at": "2026-01-15T12:00:00Z",
+    "qr_url": "https://app.acortalink.com.ar/qr/abc123/"
+  },
+  "created": true
+}</code></pre>
+
+<h2>Deduplicación automática</h2>
+
+<p>Si mandás la misma URL dos veces, la API no crea un link nuevo. Devuelve el link existente con <code>"created": false</code>. Esto evita duplicados sin que tengas que manejarlo del lado del cliente.</p>
+
+<h2>Rate limiting</h2>
+
+<table>
+<thead><tr><th>Plan</th><th>Requests/mes</th><th>Precio</th></tr></thead>
+<tbody>
+<tr><td>Starter</td><td>1.000</td><td>$4.900 ARS/mes</td></tr>
+<tr><td>Pro</td><td>5.000</td><td>$9.800 ARS/mes</td></tr>
+<tr><td>Business</td><td>25.000 + webhooks</td><td>$28.000 ARS/mes</td></tr>
+</tbody>
+</table>
+
+<p>Cuando alcanzás el límite, la API devuelve HTTP 429 con headers:</p>
+
+<pre><code>HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 1000
+X-RateLimit-Used: 1001
+{"error": "Límite de API alcanzado (1001/1000 req/mes). Considerá upgradear tu plan."}</code></pre>
+
+<h2>Webhooks (Business)</h2>
+
+<p>El plan Business incluye webhooks para eventos:</p>
+<ul>
+<li><code>link.created</code> — cuando se crea un link</li>
+<li><code>link.deleted</code> — cuando se elimina un link</li>
+<li><code>click</code> — cuando un link recibe un click</li>
+</ul>
+
+<p>Configurá tu endpoint desde el dashboard y Acortalink envía un POST firmado con cada evento.</p>
+
+<h2>Comparativa de APIs</h2>
+
+<table>
+<thead><tr><th>Acortador</th><th>API</th><th>Rate limit</th><th>Webhooks</th><th>Precio</th></tr></thead>
+<tbody>
+<tr><td><strong>Acortalink</strong></td><td class="check">REST</td><td class="check">1.000-25.000/mes</td><td class="check">Business</td><td class="check">$4.900 ARS</td></tr>
+<tr><td>Bitly</td><td class="check">REST</td><td>Limitado</td><td class="cross">No</td><td class="cross">$29 USD</td></tr>
+<tr><td>Dub.co</td><td class="check">REST</td><td>Limitado</td><td class="check">Sí</td><td class="cross">~$90 USD</td></tr>
+<tr><td>Short.io</td><td class="check">REST</td><td>Limitado</td><td class="check">Sí</td><td>$5 USD</td></tr>
+<tr><td>TinyURL</td><td class="cross">No</td><td>-</td><td class="cross">No</td><td class="cross">$9.99 USD</td></tr>
+</tbody>
+</table>
+
+<h2>Casos de uso de la API</h2>
+
+<h3>Bot de Telegram</h3>
+<p>Un bot que recibe URLs largas y devuelve links cortos. Ideal para grupos de Telegram donde se comparten muchos links.</p>
+
+<h3>Auto-posting en redes sociales</h3>
+<p> Tu script de posting automaticamente acorta cada URL antes de publicar. Con analytics, sabés qué posts generan más clicks.</p>
+
+<h3>E-commerce</h3>
+<p>Generar links cortos automáticamente para cada producto. Cuando cambiás la URL del producto, el link corto se actualiza sin tocar el frontend.</p>
+
+<h3>Email marketing</h3>
+<p>Acortar cada link de tu newsletter con un slug único. Sabés exactamente qué link generó más clicks.</p>
+
+<div class="cta-box">
+<h3>API REST lista para integrar</h3>
+<p>1.000 req/mes desde $4.900 ARS · Webhooks en Business · MercadoPago</p>
+<a href="https://app.acortalink.com.ar/registrar/" class="cta-btn">Crear cuenta →</a>
+</div>
+
+<h2>Preguntas frecuentes</h2>
+
+<details class="faq-item"><summary>¿Qué acortadores de links tienen API REST?</summary><div class="answer">Acortalink incluye API REST desde el plan Starter ($4.900 ARS/mes) con 1.000 requests/mes. Bitly incluye API desde $29 USD/mes. Dub.co incluye API desde ~$90 USD/mes. TinyURL no tiene API.</div></details>
+
+<details class="faq-item"><summary>¿Cómo autenticar la API de Acortalink?</summary><div class="answer">La API usa autenticación via header X-API-Key. Generá tu API key desde el dashboard en la sección 'API Keys'. Cada request debe incluir el header 'X-API-Key: tu-key-aqui'.</div></details>
+
+<details class="faq-item"><summary>¿Cuánto cuesta la API de Acortalink?</summary><div class="answer">La API está incluida en todos los planes pagos: Starter (1.000 req/mes, $4.900 ARS), Pro (5.000 req/mes, $9.800 ARS) y Business (25.000 req/mes + webhooks, $28.000 ARS).</div></details>
+
+<details class="faq-item"><summary>¿La API tiene rate limiting?</summary><div class="answer">Sí. El rate limiting es mensual: 1.000 requests en Starter, 5.000 en Pro y 25.000 en Business. Cuando alcanzás el límite, la API devuelve HTTP 429 con headers X-RateLimit-Limit y X-RateLimit-Used.</div></details>
+
+</article>
+</div>
+
+<footer class="footer">
+<div class="container">
+<p>⚡ Acortalink — <a href="/">Acortador de links</a> con SEO y dominios propios</p>
+<p><a href="/">Inicio</a> · <a href="/#pricing">Planes</a> · <a href="/blog/">Blog</a> · <a href="https://app.acortalink.com.ar/registrar/">Registrarse</a></p>
+<p>© 2025 Acortalink · Hecho en Argentina 🇦🇷</p>
+</div>
+</footer>
+
+</body>
+</html>

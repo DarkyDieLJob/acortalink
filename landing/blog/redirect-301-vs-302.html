@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Redirect 301 vs 302: cuándo usar cada uno | Acortalink</title>
+<meta name="description" content="Diferencia entre redirect 301 y 302. Cuándo usar cada uno para SEO, tracking y campañas. Guía técnica para developers y SEOs.">
+<meta name="keywords" content="redirect 301 vs 302, diferencia 301 302, redirect seo, 301 permanente, 302 temporal, http redirect">
+<link rel="canonical" href="https://acortalink.com.ar/blog/redirect-301-vs-302.html">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/blog/style.css">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redirect 301 vs 302: cuándo usar cada uno">
+<meta property="og:description" content="Diferencia entre redirect 301 y 302. Guía técnica.">
+<meta property="og:url" content="https://acortalink.com.ar/blog/redirect-301-vs-302.html">
+<meta property="og:site_name" content="Acortalink">
+<meta property="og:locale" content="es_AR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Redirect 301 vs 302: cuándo usar cada uno">
+<meta name="twitter:description" content="Diferencia entre redirect 301 y 302.">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"Redirect 301 vs 302: cuándo usar cada uno","description":"Diferencia entre redirect 301 y 302. Cuándo usar cada uno para SEO, tracking y campañas.","author":{"@type":"Organization","name":"Acortalink"},"publisher":{"@type":"Organization","name":"Acortalink"},"datePublished":"2026-01-15","url":"https://acortalink.com.ar/blog/redirect-301-vs-302.html"}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"¿Cuál es la diferencia entre 301 y 302?","acceptedAnswer":{"@type":"Answer","text":"301 es un redirect permanente: Google transfiere el SEO juice al destino y cachea el redirect. 302 es temporal: Google no transfiere SEO juice y no cachea, por lo que cada request pasa por tu servidor."}},{"@type":"Question","name":"¿Cuándo usar 301?","acceptedAnswer":{"@type":"Answer","text":"Usá 301 cuando el cambio es permanente: cambio de dominio, consolidación de URLs duplicadas, migración de HTTP a HTTPS, o cuando querés transferir todo el SEO juice al destino."}},{"@type":"Question","name":"¿Cuándo usar 302?","acceptedAnswer":{"@type":"Answer","text":"Usá 302 cuando el redirect es temporal o funcional: tracking de clicks, A/B testing, redirección geográfica, o cuando querés cambiar el destino después sin afectar el SEO."}},{"@type":"Question","name":"¿Qué redirect usa Acortalink?","acceptedAnswer":{"@type":"Answer","text":"Acortalink usa 302 por defecto. Esto permite trackear cada click (el redirect no se cachea) y cambiar el destino del link en cualquier momento sin afectar el SEO del destino."}}]}
+</script>
+</head>
+<body>
+
+<nav class="navbar">
+<div class="container">
+<a href="/" class="brand">⚡ Acortalink</a>
+<div class="nav-links">
+<a href="/">Inicio</a>
+<a href="/#pricing">Planes</a>
+<a href="/blog/">Blog</a>
+<a href="https://app.acortalink.com.ar/registrar/" class="btn-sm">Registrarse</a>
+</div>
+</div>
+</nav>
+
+<div class="container">
+<article>
+<h1>Redirect 301 vs 302: cuándo usar cada uno</h1>
+<p class="meta">Actualizado enero 2026 · 5 min de lectura</p>
+
+<p>Si estás construyendo un acortador de links, migrando un sitio, o haciendo tracking de clicks, necesitás entender la diferencia entre 301 y 302. No es un detalle técnico — afecta el SEO, el tracking y el comportamiento del navegador.</p>
+
+<h2>Qué es un redirect HTTP</h2>
+<p>Un redirect HTTP le dice al navegador "esta URL no está acá, andá a esta otra". El servidor responde con un código 3xx y un header <code>Location</code> con la URL de destino. El navegador sigue el redirect automáticamente.</p>
+
+<h2>301 Moved Permanently</h2>
+
+<table>
+<thead><tr><th>Característica</th><th>Valor</th></tr></thead>
+<tbody>
+<tr><td>Significado</td><td>El recurso se movió permanentemente</td></tr>
+<tr><td>SEO juice</td><td class="check">Se transfiere al destino</td></tr>
+<tr><td>Google indexa</td><td>La URL de destino</td></tr>
+<tr><td>Browser cache</td><td class="check">Sí — cachea el redirect</td></tr>
+<tr><td>Clicks trackeables</td><td class="cross">No — el browser cachea y no vuelve al server</td></tr>
+</tbody>
+</table>
+
+<h3>Cuándo usar 301</h3>
+<ul>
+<li>Cambio de dominio (<code>viejo.com</code> → <code>nuevo.com</code>)</li>
+<li>Migración HTTP → HTTPS</li>
+<li>Consolidación de URLs duplicadas</li>
+<li>URLs canónicas (www vs non-www)</li>
+<li>Cuando querés transferir todo el SEO juice</li>
+</ul>
+
+<h2>302 Found (Moved Temporarily)</h2>
+
+<table>
+<thead><tr><th>Característica</th><th>Valor</th></tr></thead>
+<tbody>
+<tr><td>Significado</td><td>El recurso se movió temporalmente</td></tr>
+<tr><td>SEO juice</td><td class="cross">No se transfiere — se queda en la URL original</td></tr>
+<tr><td>Google indexa</td><td>La URL original</td></tr>
+<tr><td>Browser cache</td><td class="cross">No — cada request pasa por el server</td></tr>
+<tr><td>Clicks trackeables</td><td class="check">Sí — cada click pasa por tu server</td></tr>
+</tbody>
+</table>
+
+<h3>Cuándo usar 302</h3>
+<ul>
+<li>Tracking de clicks (acortadores de links)</li>
+<li>A/B testing (redirigir a variantes)</li>
+<li>Redirección geográfica</li>
+<li>Campañas temporales</li>
+<li>Cuando querés cambiar el destino después</li>
+</ul>
+
+<h2>Comparativa directa</h2>
+
+<table>
+<thead><tr><th></th><th>301</th><th>302</th></tr></thead>
+<tbody>
+<tr><td>Permanente</td><td class="check">Sí</td><td class="cross">No</td></tr>
+<tr><td>SEO juice transferido</td><td class="check">Sí</td><td class="cross">No</td></tr>
+<tr><td>Browser cache</td><td class="check">Sí</td><td class="cross">No</td></tr>
+<tr><td>Tracking de clicks</td><td class="cross">No (cacheado)</td><td class="check">Sí (no cacheado)</td></tr>
+<tr><td>Editar destino después</td><td class="cross">No (cacheado)</td><td class="check">Sí</td></tr>
+<tr><td>Google indexa</td><td>URL destino</td><td>URL original</td></tr>
+</tbody>
+</table>
+
+<h2>Por qué Acortalink usa 302</h2>
+
+<p>Acortalink usa 302 por tres razones:</p>
+<ol>
+<li><strong>Tracking</strong> — cada click pasa por el servidor. Con 301, el browser cachea el redirect y los clicks futuros no se trackean.</li>
+<li><strong>Editabilidad</strong> — podés cambiar el destino del link en cualquier momento. Con 301, el browser cachea y el cambio no se refleja.</li>
+<li><strong>SEO indexable</strong> — con 302, Google indexa la URL original (tu link acortado). Si activás SEO page, Google indexa tu página con sus meta tags.</li>
+</ol>
+
+<h2>307 y 308: los primens estrictos</h2>
+<p>HTTP 1.1 agregó 307 (temporal) y 308 (permanente). La diferencia con 302/301 es que 307/308 preservan el método HTTP (GET sigue siendo GET, POST sigue siendo POST). En la práctica, para acortadores de links, 302 es suficiente porque los clicks siempre son GET.</p>
+
+<div class="cta-box">
+<h3>Acortador con 302 + SEO indexable</h3>
+<p>Tracking de clicks + páginas indexables + MercadoPago · Desde $4.900 ARS/mes</p>
+<a href="https://app.acortalink.com.ar/registrar/" class="cta-btn">Crear cuenta →</a>
+</div>
+
+<h2>Preguntas frecuentes</h2>
+
+<details class="faq-item"><summary>¿Cuál es la diferencia entre 301 y 302?</summary><div class="answer">301 es un redirect permanente: Google transfiere el SEO juice al destino y cachea el redirect. 302 es temporal: Google no transfiere SEO juice y no cachea, por lo que cada request pasa por tu servidor.</div></details>
+
+<details class="faq-item"><summary>¿Cuándo usar 301?</summary><div class="answer">Usá 301 cuando el cambio es permanente: cambio de dominio, consolidación de URLs duplicadas, migración de HTTP a HTTPS, o cuando querés transferir todo el SEO juice al destino.</div></details>
+
+<details class="faq-item"><summary>¿Cuándo usar 302?</summary><div class="answer">Usá 302 cuando el redirect es temporal o funcional: tracking de clicks, A/B testing, redirección geográfica, o cuando querés cambiar el destino después sin afectar el SEO.</div></details>
+
+<details class="faq-item"><summary>¿Qué redirect usa Acortalink?</summary><div class="answer">Acortalink usa 302 por defecto. Esto permite trackear cada click (el redirect no se cachea) y cambiar el destino del link en cualquier momento sin afectar el SEO del destino.</div></details>
+
+</article>
+</div>
+
+<footer class="footer">
+<div class="container">
+<p>⚡ Acortalink — <a href="/">Acortador de links</a> con SEO y dominios propios</p>
+<p><a href="/">Inicio</a> · <a href="/#pricing">Planes</a> · <a href="/blog/">Blog</a> · <a href="https://app.acortalink.com.ar/registrar/">Registrarse</a></p>
+<p>© 2025 Acortalink · Hecho en Argentina 🇦🇷</p>
+</div>
+</footer>
+
+</body>
+</html>
