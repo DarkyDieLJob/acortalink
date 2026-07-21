@@ -1766,3 +1766,78 @@ def staff_dashboard(request):
     return render(request, 'core/staff_dashboard.html', {
         'is_premium': _is_premium(request.user),
     })
+
+
+def robots_txt(request):
+    """robots.txt para la app Django (app.acortalink.com.ar)."""
+    lines = [
+        'User-agent: *',
+        'Disallow: /admin/',
+        'Disallow: /api/',
+        'Disallow: /staff/',
+        'Disallow: /mis-links/',
+        'Disallow: /bulk/',
+        'Disallow: /editar/',
+        'Disallow: /eliminar/',
+        'Disallow: /perfil/',
+        'Disallow: /verificar/',
+        'Disallow: /subscribir/',
+        'Disallow: /dominios/',
+        'Disallow: /team/',
+        'Disallow: /webhooks/',
+        'Disallow: /api-keys/',
+        'Disallow: /qr/',
+        'Disallow: /*/reportar/',
+        '',
+        'Sitemap: https://app.acortalink.com.ar/sitemap.xml',
+    ]
+    return HttpResponse('\n'.join(lines), content_type='text/plain')
+
+
+def sitemap_xml(request):
+    """sitemap.xml dinamico para la app Django.
+
+    Lista paginas publicas estaticas + links premium con SEO habilitado.
+    """
+    from django.conf import settings as dj_settings
+    from datetime import datetime
+
+    site_url = getattr(dj_settings, 'SITE_URL', 'https://app.acortalink.com.ar').rstrip('/')
+    now = datetime.now().strftime('%Y-%m-%d')
+
+    urls = [
+        {'loc': f'{site_url}/', 'priority': '1.0', 'changefreq': 'weekly'},
+        {'loc': f'{site_url}/registrar/', 'priority': '0.8', 'changefreq': 'monthly'},
+        {'loc': f'{site_url}/ingresar/', 'priority': '0.6', 'changefreq': 'monthly'},
+        {'loc': f'{site_url}/privacidad/', 'priority': '0.3', 'changefreq': 'yearly'},
+        {'loc': f'{site_url}/contacto/', 'priority': '0.5', 'changefreq': 'monthly'},
+    ]
+
+    seo_links = ShortLink.objects.filter(
+        is_premium=True, has_seo=True,
+    ).only('short_code', 'seo_updated_at').order_by('-seo_updated_at')[:500]
+
+    for link in seo_links:
+        lastmod = link.seo_updated_at.strftime('%Y-%m-%d') if link.seo_updated_at else now
+        urls.append({
+            'loc': f'{site_url}/s/{link.short_code}/',
+            'priority': '0.7',
+            'changefreq': 'weekly',
+            'lastmod': lastmod,
+        })
+
+    xml_parts = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+    for u in urls:
+        xml_parts.append('  <url>')
+        xml_parts.append(f'    <loc>{u["loc"]}</loc>')
+        if 'lastmod' in u:
+            xml_parts.append(f'    <lastmod>{u["lastmod"]}</lastmod>')
+        xml_parts.append(f'    <changefreq>{u["changefreq"]}</changefreq>')
+        xml_parts.append(f'    <priority>{u["priority"]}</priority>')
+        xml_parts.append('  </url>')
+    xml_parts.append('</urlset>')
+
+    return HttpResponse('\n'.join(xml_parts), content_type='application/xml')
