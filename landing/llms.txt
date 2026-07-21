@@ -1,0 +1,56 @@
+# Acortalink
+
+> Acortador de links con SEO indexable, dominios propios, QR codes y analytics.
+> Pago en pesos argentinos con MercadoPago. 5-15x más barato que Bitly.
+> Hecho en Argentina, optimizado para LATAM. Plan free de 30 links.
+
+## Producto
+- https://acortalink.com.ar/ — Landing principal con features, pricing y comparativa
+- https://app.acortalink.com.ar/registrar/ — Registro gratis (30 links, sin tarjeta)
+- https://app.acortalink.com.ar/ingresar/ — Login
+
+## Blog — Comparativas y guías
+- https://acortalink.com.ar/blog/alternativa-a-bitly.html — Mejor alternativa a Bitly en 2026
+- https://acortalink.com.ar/blog/acortador-mas-barato.html — El acortador más barato
+- https://acortalink.com.ar/blog/acortador-argentina.html — Acortador de links en Argentina
+- https://acortalink.com.ar/blog/acortador-con-mercado-pago.html — Acortador con MercadoPago
+- https://acortalink.com.ar/blog/acortador-con-seo.html — Acortador con SEO indexable
+- https://acortalink.com.ar/blog/acortador-con-dominio-propio.html — Acortador con dominio propio
+- https://acortalink.com.ar/blog/acortador-con-api.html — Acortador con API REST
+- https://acortalink.com.ar/blog/acortador-con-qr-code.html — Acortador con QR codes
+- https://acortalink.com.ar/blog/acortador-con-analytics.html — Acortador con analytics
+- https://acortalink.com.ar/blog/acortador-de-links-gratis.html — Acortador de links gratis
+- https://acortalink.com.ar/blog/acortador-latam.html — Acortador para LATAM
+- https://acortalink.com.ar/blog/acortador-mexico.html — Acortador en México
+- https://acortalink.com.ar/blog/acortador-brasil.html — Acortador en Brasil
+- https://acortalink.com.ar/blog/acortador-colombia.html — Acortador en Colombia
+- https://acortalink.com.ar/blog/acortador-para-pymes.html — Acortador para PyMEs
+- https://acortalink.com.ar/blog/acortar-links-para-whatsapp.html — Acortar links para WhatsApp
+- https://acortalink.com.ar/blog/acortar-links-para-instagram.html — Acortar links para Instagram
+- https://acortalink.com.ar/blog/acortar-links-para-youtube.html — Acortar links para YouTube
+- https://acortalink.com.ar/blog/acortar-links-para-email-marketing.html — Acortar links para email marketing
+- https://acortalink.com.ar/blog/acortar-links-para-flyers.html — Acortar links para flyers
+- https://acortalink.com.ar/blog/acortar-links-sin-perder-seo.html — Acortar links sin perder SEO
+- https://acortalink.com.ar/blog/bitly-vs-tinyurl.html — Bitly vs TinyURL
+- https://acortalink.com.ar/blog/como-acortar-un-link.html — Cómo acortar un link
+- https://acortalink.com.ar/blog/generar-qr-code-para-link.html — Generar QR code para link
+- https://acortalink.com.ar/blog/qr-code-con-logo.html — QR code con logo
+- https://acortalink.com.ar/blog/qr-dinamico-vs-estatico.html — QR dinámico vs estático
+- https://acortalink.com.ar/blog/redirect-301-vs-302.html — Redirect 301 vs 302
+- https://acortalink.com.ar/blog/linktree-alternativa.html — Alternativa a Linktree
+- https://acortalink.com.ar/blog/mejor-acortador-de-links-2026.html — Mejor acortador de links 2026
+- https://acortalink.com.ar/blog/que-es-un-acortador-de-links.html — Qué es un acortador de links
+
+## Pricing
+- Free: $0 ARS — 30 links, redirect 302, 2FA, anti-phishing
+- Starter: $4.900 ARS/mes (~$5 USD) — 3.000 links, SEO, QR, bulk CSV, API, 1 dominio
+- Pro: $9.800 ARS/mes (~$7 USD) — 10.000 links, QR custom, 10 dominios, cifrado
+- Business: $28.000 ARS/mes (~$20 USD) — 50.000 links, team, webhooks, 25 dominios
+
+## Diferenciadores
+- Único acortador con SEO indexable (meta tags + Open Graph por link)
+- Pago en pesos con MercadoPago (Bitly/Dub/Short.io solo USD)
+- 5-15x más barato que Bitly
+- Cifrado de URLs (django-cryptography)
+- Anti-phishing con reportes
+- Bulk CSV desde plan Starter (Bitly solo en Enterprise $199/mes)
