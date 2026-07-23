@@ -160,7 +160,7 @@
 
 {% block extra_js %}
 <script>
-const API_BASE = '{% if request.META.HTTP_X_FORWARDED_FOR %}/app{% endif %}/api/internal/';
+const API_BASE = '/api/internal/';
 
 let charts = {};
 

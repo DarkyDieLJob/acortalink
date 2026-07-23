@@ -65,6 +65,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'acortador_project.context_processors.google_ads',
             ],
         },
     },
@@ -200,6 +201,9 @@ REGISTRAR_API_USER = os.environ.get('REGISTRAR_API_USER', '')
 # Set DONWEB_AFFILIATE_ENABLED=True to show the referral section in custom domains
 DONWEB_AFFILIATE_LINK = os.environ.get('DONWEB_AFFILIATE_LINK', '')
 DONWEB_AFFILIATE_ENABLED = os.environ.get('DONWEB_AFFILIATE_ENABLED', 'False').lower() in ('true', '1', 'yes')
+
+# Google Ads (gtag.js) — shared across landing + app
+GOOGLE_ADS_ID = os.environ.get('GOOGLE_ADS_ID', 'AW-18282918371')
 
 # Field-level encryption (django-cryptography)
 FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY', '')
