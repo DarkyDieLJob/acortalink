@@ -204,6 +204,8 @@ DONWEB_AFFILIATE_ENABLED = os.environ.get('DONWEB_AFFILIATE_ENABLED', 'False').l
 
 # Google Ads (gtag.js) — shared across landing + app
 GOOGLE_ADS_ID = os.environ.get('GOOGLE_ADS_ID', 'AW-18282918371')
+# Google Analytics 4 (GA4) — visit tracking + conversion funnels
+GA4_ID = os.environ.get('GA4_ID', '')
 
 # Field-level encryption (django-cryptography)
 FIELD_ENCRYPTION_KEY = os.environ.get('FIELD_ENCRYPTION_KEY', '')

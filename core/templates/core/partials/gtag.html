@@ -6,4 +6,13 @@
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', '{{ GOOGLE_ADS_ID }}');
+  {% if GA4_ID %}
+  gtag('config', '{{ GA4_ID }}', {
+    'linker': {
+      'domains': ['acortalink.com.ar', 'app.acortalink.com.ar'],
+      'decorate_forms': true,
+    },
+    'send_page_view': true,
+  });
+  {% endif %}
 </script>

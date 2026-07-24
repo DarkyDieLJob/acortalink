@@ -1018,6 +1018,7 @@ def registro(request):
             return render(request, 'core/registro_pendiente.html', {
                 'email': email,
                 'is_premium': False,
+                'registration_success': True,
             })
         else:
             return render(request, 'core/registro.html', {

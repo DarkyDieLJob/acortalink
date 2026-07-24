@@ -31,3 +31,15 @@
 </div>
 
 {% endblock %}
+
+{% block extra_js %}
+{% if registration_success %}
+<script>
+  // Conversion: user completed registration
+  if (typeof gtag === 'function') {
+    {% if GA4_ID %}gtag('event', 'sign_up', { 'method': 'email', 'event_category': 'engagement' });{% endif %}
+    gtag('event', 'conversion', { 'send_to': '{{ GOOGLE_ADS_ID }}/signup_complete' });
+  }
+</script>
+{% endif %}
+{% endblock %}
