@@ -121,13 +121,29 @@ def cancel_preapproval(preapproval_id):
     })
 
 
+def refund_payment(payment_id):
+    """Refund a Mercado Pago payment (full refund).
+
+    Returns True if refund was processed, False otherwise.
+    """
+    if not _mp_enabled():
+        raise RuntimeError('MERCADOPAGO_ACCESS_TOKEN no configurado')
+
+    sdk = _get_sdk()
+    response = sdk.payment().refund(payment_id)
+
+    if response.get('status', 500) >= 400:
+        logger.error('MP refund failed for payment %s: %s', payment_id, response.get('response', {}))
+        return False
+    return True
+
+
 # --- Webhook ---
 
 def handle_webhook_event(event_data):
-    """Process a Mercado Pago webhook notification.
+    """Process a Mercado Pago webhook notification (JSON body format).
 
-    MP sends notifications for preapproval events. We sync the subscription
-    status based on the event type.
+    MP sends notifications for preapproval and payment events.
     """
     event_type = event_data.get('type', '')
     data = event_data.get('data', {})
@@ -136,6 +152,28 @@ def handle_webhook_event(event_data):
         _handle_preapproval_event(data)
     elif event_type == 'payment':
         _handle_payment_event(data)
+
+
+def handle_webhook_by_id(event_type, resource_id):
+    """Process a webhook notification given only type and ID (query param format).
+
+    MP commonly sends: POST /?type=payment&data.id=12345
+    We need to fetch the full resource from MP API to get its status.
+    """
+    if not resource_id:
+        return
+
+    sdk = _get_sdk()
+
+    if event_type == 'preapproval':
+        result = sdk.preapproval().get(resource_id)
+        if result.get('status') < 400:
+            _handle_preapproval_event(result.get('response', {}))
+
+    elif event_type == 'payment':
+        result = sdk.payment().get(resource_id)
+        if result.get('status') < 400:
+            _handle_payment_event(result.get('response', {}))
 
 
 def _find_subscription_by_mp_id(mp_id):
@@ -206,6 +244,7 @@ def _handle_payment_event(data):
     if status == 'approved':
         sub.status = Subscription.STATUS_ACTIVE
         sub.fecha_inicio = timezone.now()
+        sub.last_payment_id = payment_id
     elif status in ('rejected', 'cancelled'):
         if sub.status == Subscription.STATUS_ACTIVE:
             sub.status = Subscription.STATUS_EXPIRED

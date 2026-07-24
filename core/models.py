@@ -82,6 +82,7 @@ class Subscription(models.Model):
     plan = models.CharField(max_length=20, choices=PLAN_CHOICES, default=PLAN_STARTER)
     provider = models.CharField(max_length=30, default='mercadopago')
     provider_id = models.CharField(max_length=100, blank=True, default='')
+    last_payment_id = models.CharField(max_length=100, blank=True, default='')
     stripe_customer_id = models.CharField(max_length=100, blank=True, default='')
     fecha_inicio = models.DateTimeField(null=True, blank=True)
     fecha_fin = models.DateTimeField(null=True, blank=True)

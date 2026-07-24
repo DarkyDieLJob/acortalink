@@ -1166,15 +1166,31 @@ def checkout(request):
 
 @acortador_login_required
 def cancelar_subscripcion(request):
-    """Cancela la subscripción premium según el provider."""
+    """Cancela la subscripción premium según el provider.
+
+    Si la subscripción tiene menos de 7 días desde que se activó,
+    se devuelve el dinero automáticamente (garantía de devolución).
+    """
     if request.method != 'POST':
         return redirect('core:subscribir')
 
     sub = getattr(request.user, 'subscription', None)
+    refund_msg = ''
+
     if sub and sub.status == Subscription.STATUS_ACTIVE and sub.provider_id:
+        # Verificar garantía de 7 días
+        within_7_days = (
+            sub.fecha_inicio and
+            (timezone.now() - sub.fecha_inicio).days < 7
+        )
+
         try:
             if sub.provider == 'mercadopago':
                 mercadopago_service.cancel_preapproval(sub.provider_id)
+                if within_7_days and sub.last_payment_id:
+                    refunded = mercadopago_service.refund_payment(sub.last_payment_id)
+                    if refunded:
+                        refund_msg = '?refund=ok'
             elif sub.provider == 'stripe' and _stripe_enabled():
                 stripe_service.cancel_stripe_subscription(sub.provider_id)
         except Exception:
@@ -1187,7 +1203,7 @@ def cancelar_subscripcion(request):
         sub.fecha_fin = timezone.now()
         sub.save()
 
-    return redirect('core:subscribir')
+    return redirect(f'{reverse("core:subscribir")}{refund_msg}')
 
 
 def privacidad(request):
@@ -1279,7 +1295,9 @@ def stripe_webhook(request):
 def mercadopago_webhook(request):
     """Webhook de Mercado Pago — procesa notificaciones de preapproval/pago.
 
-    MP envía POST con JSON: {"type": "preapproval", "data": {...}}
+    MP envía notificaciones en dos formatos:
+    1. Query params: POST /?type=payment&data.id=123 (body vacío) — lo más común
+    2. JSON body: {"type": "payment", "data": {"id": "123"}} — menos común
     """
     if request.method != 'POST':
         return HttpResponse(status=405)
@@ -1288,15 +1306,35 @@ def mercadopago_webhook(request):
         return HttpResponse(status=404)
 
     import json
-    try:
-        event_data = json.loads(request.body)
-    except (json.JSONDecodeError, ValueError):
+
+    event_type = None
+    data_id = None
+    event_data = None
+
+    # Formato 1: query params (lo más común en MP)
+    if request.GET.get('type') or request.GET.get('data.id'):
+        event_type = request.GET.get('type', '')
+        data_id = request.GET.get('data.id', '')
+    else:
+        # Formato 2: JSON body
+        try:
+            event_data = json.loads(request.body)
+            event_type = event_data.get('type', '')
+            data = event_data.get('data', {})
+            data_id = str(data.get('id', '')) if isinstance(data, dict) else ''
+        except (json.JSONDecodeError, ValueError):
+            return HttpResponse(status=400)
+
+    if not event_type:
         return HttpResponse(status=400)
 
     try:
-        mercadopago_service.handle_webhook_event(event_data)
+        if event_data:
+            mercadopago_service.handle_webhook_event(event_data)
+        else:
+            mercadopago_service.handle_webhook_by_id(event_type, data_id)
     except Exception:
-        pass
+        logger.exception('MP webhook error: type=%s id=%s', event_type, data_id)
 
     return HttpResponse(status=200)
 
