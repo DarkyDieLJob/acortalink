@@ -431,7 +431,13 @@
                         {% endif %}
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'core:contacto' %}">✉ Contacto</a></li>
-                        <li><a class="dropdown-item" href="{% url 'logout' %}?next={% url 'core:index' %}">⏏ Salir</a></li>
+                        <li>
+                            <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{% url 'core:index' %}">
+                                <button type="submit" class="dropdown-item" style="border:none;background:none;cursor:pointer;width:100%;text-align:left;">⏏ Salir</button>
+                            </form>
+                        </li>
                     </ul>
                 </div>
             {% else %}
