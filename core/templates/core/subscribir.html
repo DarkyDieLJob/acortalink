@@ -269,4 +269,15 @@
     <a href="{% url 'core:index' %}" class="console-link">Volver al acortador</a>
 </div>
 
+{% if checkout_status == 'success' and conversion_transaction_id %}
+<script>
+  gtag('event', 'conversion', {
+    'send_to': '{{ GOOGLE_ADS_ID }}/{{ GOOGLE_ADS_SUBSCRIPTION_LABEL }}',
+    'transaction_id': '{{ conversion_transaction_id }}',
+    'value': 1.0,
+    'currency': 'ARS',
+  });
+</script>
+{% endif %}
+
 {% endblock %}

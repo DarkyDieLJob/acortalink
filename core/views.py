@@ -1112,6 +1112,17 @@ def subscribir(request):
     checkout_status = request.GET.get('checkout', '')
     provider = _payment_provider()
     plan_prices = getattr(settings, 'PLAN_PRICES', {})
+
+    # Google Ads conversion: fire once per checkout success
+    conversion_transaction_id = ''
+    if checkout_status == 'success':
+        if not request.session.get('sub_conversion_fired'):
+            import uuid
+            conversion_transaction_id = str(uuid.uuid4())
+            request.session['sub_conversion_fired'] = True
+            request.session['sub_conversion_txid'] = conversion_transaction_id
+        # else: already fired, don't re-fire on refresh
+
     return render(request, 'core/subscribir.html', {
         'has_sub': has_sub,
         'sub_status': sub_status,
@@ -1119,6 +1130,7 @@ def subscribir(request):
         'is_premium': _is_premium(request.user),
         'checkout_status': checkout_status,
         'payment_provider': provider,
+        'conversion_transaction_id': conversion_transaction_id,
         'plan_prices': {
             'starter': f'{plan_prices.get("starter", 4900):,}',
             'pro': f'{plan_prices.get("pro", 9800):,}',
