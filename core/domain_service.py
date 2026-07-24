@@ -183,6 +183,7 @@ def create_domain_payment(user, domain):
             'quantity': 1,
             'unit_price': price,
             'currency_id': settings.MERCADOPAGO_CURRENCY,
+            'picture_url': 'https://acortalink.com.ar/mp-logo.png',
         }],
         'external_reference': f'domain:{cd.pk}',
         'back_urls': {
@@ -190,7 +191,9 @@ def create_domain_payment(user, domain):
             'failure': f'{base}/dominios/?checkout=failure',
             'pending': f'{base}/dominios/?checkout=pending',
         },
+        'notification_url': f'{base}/mercadopago/webhook/',
         'auto_return': 'approved',
+        'statement_descriptor': 'ACORTALINK',
     }
 
     response = sdk.preference().create(preference_data)

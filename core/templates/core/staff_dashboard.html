@@ -136,6 +136,21 @@
         </div>
     </div>
 
+    <div class="chart-grid">
+        <div class="chart-card">
+            <h3>Verificaciones email (30 días)</h3>
+            <canvas id="chart-verifications"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Funnel marketing (30 días)</h3>
+            <canvas id="chart-funnel"></canvas>
+        </div>
+        <div class="chart-card">
+            <h3>Revenue por plan (ARS/mes)</h3>
+            <canvas id="chart-revenue-plan"></canvas>
+        </div>
+    </div>
+
     <div class="health-grid" id="health-grid">
         <div class="loading">Cargando health...</div>
     </div>
@@ -151,9 +166,20 @@
         </div>
     </div>
 
+    <div class="chart-grid">
+        <div class="table-card">
+            <h3>Subscripciones recientes</h3>
+            <div id="recent-subs"><div class="loading">Cargando...</div></div>
+        </div>
+        <div class="table-card">
+            <h3>Verificaciones pendientes</h3>
+            <div id="pending-verifications"><div class="loading">Cargando...</div></div>
+        </div>
+    </div>
+
     <div class="table-card">
-        <h3>Subscripciones recientes</h3>
-        <div id="recent-subs"><div class="loading">Cargando...</div></div>
+        <h3>Revenue detallado</h3>
+        <div id="revenue-detail"><div class="loading">Cargando...</div></div>
     </div>
 </div>
 {% endblock %}
@@ -251,7 +277,12 @@ function makeDoughnutChart(canvasId, labels, data, colors) {
 }
 
 async function loadOverview() {
-    const d = await fetchJSON(API_BASE + 'overview/');
+    const [d, v, m, r] = await Promise.all([
+        fetchJSON(API_BASE + 'overview/'),
+        fetchJSON(API_BASE + 'verifications/'),
+        fetchJSON(API_BASE + 'marketing/'),
+        fetchJSON(API_BASE + 'revenue/'),
+    ]);
     const grid = document.getElementById('stat-grid');
     grid.innerHTML = `
         <div class="stat-card"><div class="stat-label">Usuarios totales</div><div class="stat-value">${fmtNum(d.users.total)}</div><div class="stat-sub">${d.users.active_24h} activos 24h · ${d.users.new_7d} nuevos 7d</div></div>
@@ -259,6 +290,9 @@ async function loadOverview() {
         <div class="stat-card info"><div class="stat-label">Clicks totales</div><div class="stat-value">${fmtNum(d.clicks.total)}</div><div class="stat-sub">${d.clicks.events_24h} eventos 24h · ${d.clicks.events_7d} en 7d</div></div>
         <div class="stat-card ${d.subscriptions.active > 0 ? '' : 'warn'}"><div class="stat-label">Subs activas</div><div class="stat-value">${fmtNum(d.subscriptions.active)}</div></div>
         <div class="stat-card ${d.reports.pending > 0 ? 'danger' : ''}"><div class="stat-label">Reportes pendientes</div><div class="stat-value">${fmtNum(d.reports.pending)}</div></div>
+        <div class="stat-card ${v.activation_rate < 50 ? 'warn' : ''}"><div class="stat-label">Activación email</div><div class="stat-value">${v.activation_rate}%</div><div class="stat-sub">${v.activation_rate_7d}% últimos 7d · ${v.pending} pendientes</div></div>
+        <div class="stat-card ${m.conversion_rate['7d'] < 5 ? 'warn' : ''}"><div class="stat-label">Conv. landing→registro</div><div class="stat-value">${m.conversion_rate['7d']}%</div><div class="stat-sub">${m.conversion_rate['30d']}% en 30d · ${m.conversion_rate.total}% total</div></div>
+        <div class="stat-card info"><div class="stat-label">MRR estimado</div><div class="stat-value">$${fmtNum(r.mrr)}</div><div class="stat-sub">ARS/mes · ARPU $${fmtNum(r.arpu)} · LTV $${fmtNum(r.ltv)}</div></div>
     `;
 }
 
@@ -327,6 +361,99 @@ async function loadSubscriptions() {
     el.innerHTML = html;
 }
 
+async function loadVerifications() {
+    const d = await fetchJSON(API_BASE + 'verifications/');
+    const labels = d.daily_verifications.map(s => s.date.slice(5));
+    const sentData = d.daily_verifications.map(s => s.sent);
+    const activatedData = d.daily_verifications.map(s => s.activated);
+    const ctx = document.getElementById('chart-verifications');
+    if (!ctx) return;
+    if (charts['chart-verifications']) charts['chart-verifications'].destroy();
+    charts['chart-verifications'] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Enviados', data: sentData, borderColor: '#17a2b8', backgroundColor: '#17a2b820', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                { label: 'Activados', data: activatedData, borderColor: '#00ff41', backgroundColor: '#00ff4120', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2 },
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: true, labels: { color: '#888', font: { size: 10 } } } },
+            scales: {
+                x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 8 }, grid: { color: '#1a1a1a' } },
+                y: { ticks: { color: '#555', font: { size: 9 } }, grid: { color: '#1a1a1a' }, beginAtZero: true }
+            }
+        }
+    });
+
+    const el = document.getElementById('pending-verifications');
+    if (!d.pending_users.length) {
+        el.innerHTML = '<div class="loading">Sin pendientes</div>';
+        return;
+    }
+    let html = '<table><thead><tr><th>Usuario</th><th>Email</th><th>Registro</th></tr></thead><tbody>';
+    d.pending_users.forEach(u => {
+        html += `<tr><td class="mono">${u.username}</td><td>${u.email||'—'}</td><td>${fmtDate(u.date_joined)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+async function loadMarketing() {
+    const d = await fetchJSON(API_BASE + 'marketing/');
+    const labels = d.daily_visits.map(s => s.date.slice(5));
+    const visitsData = d.daily_visits.map(s => s.count);
+    const signupsData = d.daily_signups.map(s => s.count);
+    const ctx = document.getElementById('chart-funnel');
+    if (!ctx) return;
+    if (charts['chart-funnel']) charts['chart-funnel'].destroy();
+    charts['chart-funnel'] = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                { label: 'Visitas /registrar/', data: visitsData, borderColor: '#ffc107', backgroundColor: '#ffc10720', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2 },
+                { label: 'Signups', data: signupsData, borderColor: '#00ff41', backgroundColor: '#00ff4120', fill: false, tension: 0.3, pointRadius: 0, borderWidth: 2 },
+            ]
+        },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: { legend: { display: true, labels: { color: '#888', font: { size: 10 } } } },
+            scales: {
+                x: { ticks: { color: '#555', font: { size: 9 }, maxTicksLimit: 8 }, grid: { color: '#1a1a1a' } },
+                y: { ticks: { color: '#555', font: { size: 9 } }, grid: { color: '#1a1a1a' }, beginAtZero: true }
+            }
+        }
+    });
+}
+
+async function loadRevenue() {
+    const d = await fetchJSON(API_BASE + 'revenue/');
+
+    const planLabels = d.revenue_by_plan.map(p => p.plan);
+    const planMrr = d.revenue_by_plan.map(p => p.mrr);
+    const planColors = ['#00ff41', '#17a2b8', '#ffc107'];
+    makeDoughnutChart('chart-revenue-plan', planLabels, planMrr, planColors);
+
+    const el = document.getElementById('revenue-detail');
+    let html = '<table><thead><tr><th>Métrica</th><th>Valor</th></tr></thead><tbody>';
+    html += `<tr><td>MRR (ARS/mes)</td><td class="mono">$${fmtNum(d.mrr)}</td></tr>`;
+    html += `<tr><td>ARPU</td><td class="mono">$${fmtNum(d.arpu)}</td></tr>`;
+    html += `<tr><td>LTV (12 meses)</td><td class="mono">$${fmtNum(d.ltv)}</td></tr>`;
+    html += `<tr><td>Churn rate (30d)</td><td class="mono">${d.churn_rate}%</td></tr>`;
+    html += `<tr><td>Canceladas (30d)</td><td>${d.cancelled_30d}</td></tr>`;
+    html += `<tr><td>Subs activas</td><td>${d.active_count}</td></tr>`;
+    html += '</tbody></table>';
+    html += '<table style="margin-top:1rem;"><thead><tr><th>Plan</th><th>Count</th><th>MRR</th></tr></thead><tbody>';
+    d.revenue_by_plan.forEach(p => {
+        html += `<tr><td class="mono">${p.plan}</td><td>${p.count}</td><td class="mono">$${fmtNum(p.mrr)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
 async function loadHealth() {
     const d = await fetchJSON(API_BASE + 'health/');
     const grid = document.getElementById('health-grid');
@@ -368,6 +495,9 @@ async function loadAll() {
             loadLinks(),
             loadClicks(),
             loadSubscriptions(),
+            loadVerifications(),
+            loadMarketing(),
+            loadRevenue(),
             loadHealth(),
         ]);
     } catch(e) {

@@ -970,6 +970,19 @@ def registro(request):
     if request.user.is_authenticated:
         return redirect('core:index')
 
+    if request.method == 'GET':
+        from django.core.cache import cache
+        from django.utils import timezone
+        day_key = f'marketing:registrar_visits:{timezone.now().date().isoformat()}'
+        try:
+            cache.incr(day_key)
+        except ValueError:
+            cache.set(day_key, 1, timeout=3024000)  # 35 days
+        try:
+            cache.incr('marketing:registrar_visits:total')
+        except ValueError:
+            cache.set('marketing:registrar_visits:total', 1)
+
     if request.method == 'POST':
         ip = client_ip(request)
 

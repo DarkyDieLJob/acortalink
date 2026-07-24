@@ -35,6 +35,8 @@ PLAN_REASONS = {
 PREAPPROVAL_FREQUENCY = 1  # every 1 month
 PREAPPROVAL_FREQUENCY_TYPE = 'months'
 
+MP_LOGO_URL = 'https://acortalink.com.ar/mp-logo.png'
+
 
 def _get_sdk():
     """Return a configured Mercado Pago SDK instance."""
@@ -90,6 +92,7 @@ def create_preapproval(user, plan='starter'):
             'currency_id': settings.MERCADOPAGO_CURRENCY,
         },
         'back_url': f'{_base_url()}/subscribir/?checkout=success',
+        'notification_url': f'{_base_url()}/mercadopago/webhook/',
         'status': 'pending',
     })
 

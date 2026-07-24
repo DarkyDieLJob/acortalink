@@ -6,6 +6,9 @@ Endpoints (all require is_staff, session auth):
   GET /api/internal/links/          — link stats and top links
   GET /api/internal/clicks/         — click events breakdown (device, browser, referrer)
   GET /api/internal/subscriptions/  — subscription revenue and plan distribution
+  GET /api/internal/verifications/  — email activation funnel
+  GET /api/internal/marketing/      — landing → registro conversion funnel
+  GET /api/internal/revenue/        — MRR, churn, ARPU, LTV
   GET /api/internal/health/         — system health (Redis, DB, cache hit rate)
 """
 
@@ -23,6 +26,7 @@ from django.views.decorators.http import require_GET
 from .models import (
     ShortLink, ClickEvent, Subscription, User,
     ApiKey, CustomDomain, LinkReport, Webhook, TeamMember,
+    EmailVerification,
 )
 
 
@@ -300,11 +304,209 @@ def health(request):
     })
 
 
+@require_GET
+@_staff_required
+def verifications(request):
+    """GET /api/internal/verifications/ — email activation funnel."""
+    now = timezone.now()
+    last_7d = now - timedelta(days=7)
+    last_30d = now - timedelta(days=30)
+
+    total_sent = EmailVerification.objects.filter(
+        verification_type=EmailVerification.TYPE_ACTIVATION,
+    ).count()
+    total_activated = EmailVerification.objects.filter(
+        verification_type=EmailVerification.TYPE_ACTIVATION,
+        used=True,
+    ).count()
+    pending = EmailVerification.objects.filter(
+        verification_type=EmailVerification.TYPE_ACTIVATION,
+        used=False,
+        expires_at__gt=now,
+    ).count()
+    expired = EmailVerification.objects.filter(
+        verification_type=EmailVerification.TYPE_ACTIVATION,
+        used=False,
+        expires_at__lte=now,
+    ).count()
+
+    activation_rate = round(total_activated / total_sent * 100, 1) if total_sent else 0
+
+    sent_7d = EmailVerification.objects.filter(
+        verification_type=EmailVerification.TYPE_ACTIVATION,
+        creado__gte=last_7d,
+    ).count()
+    activated_7d = EmailVerification.objects.filter(
+        verification_type=EmailVerification.TYPE_ACTIVATION,
+        used=True,
+        creado__gte=last_7d,
+    ).count()
+    activation_rate_7d = round(activated_7d / sent_7d * 100, 1) if sent_7d else 0
+
+    daily_verifications = []
+    for i in range(30):
+        day = (last_30d + timedelta(days=i)).date()
+        next_day = day + timedelta(days=1)
+        sent = EmailVerification.objects.filter(
+            verification_type=EmailVerification.TYPE_ACTIVATION,
+            creado__gte=day,
+            creado__lt=next_day,
+        ).count()
+        activated = EmailVerification.objects.filter(
+            verification_type=EmailVerification.TYPE_ACTIVATION,
+            used=True,
+            creado__gte=day,
+            creado__lt=next_day,
+        ).count()
+        daily_verifications.append({
+            'date': day.isoformat(), 'sent': sent, 'activated': activated,
+        })
+
+    pending_users = User.objects.filter(
+        is_active=False,
+    ).order_by('-date_joined')[:20].values(
+        'username', 'email', 'date_joined',
+    )
+
+    return JsonResponse({
+        'total_sent': total_sent,
+        'total_activated': total_activated,
+        'pending': pending,
+        'expired': expired,
+        'activation_rate': activation_rate,
+        'activation_rate_7d': activation_rate_7d,
+        'sent_7d': sent_7d,
+        'activated_7d': activated_7d,
+        'daily_verifications': daily_verifications,
+        'pending_users': list(pending_users),
+    })
+
+
+@require_GET
+@_staff_required
+def marketing(request):
+    """GET /api/internal/marketing/ — landing → registro conversion funnel."""
+    now = timezone.now()
+    last_7d = now - timedelta(days=7)
+    last_30d = now - timedelta(days=30)
+
+    total_visits = cache.get('marketing:registrar_visits:total', 0) or 0
+    visits_7d = 0
+    visits_30d = 0
+    for i in range(30):
+        day = (last_30d + timedelta(days=i)).date()
+        day_key = f'marketing:registrar_visits:{day.isoformat()}'
+        count = cache.get(day_key, 0) or 0
+        if i >= 23:
+            visits_7d += count
+        visits_30d += count
+
+    total_signups = User.objects.count()
+    signups_7d = User.objects.filter(date_joined__gte=last_7d).count()
+    signups_30d = User.objects.filter(date_joined__gte=last_30d).count()
+
+    pending_activation = User.objects.filter(is_active=False).count()
+
+    active_signups = User.objects.filter(is_active=True).count()
+
+    conv_rate_7d = round(signups_7d / visits_7d * 100, 1) if visits_7d else 0
+    conv_rate_30d = round(signups_30d / visits_30d * 100, 1) if visits_30d else 0
+    conv_rate_total = round(active_signups / total_visits * 100, 1) if total_visits else 0
+
+    daily_visits = []
+    daily_signups = []
+    for i in range(30):
+        day = (last_30d + timedelta(days=i)).date()
+        next_day = day + timedelta(days=1)
+        day_key = f'marketing:registrar_visits:{day.isoformat()}'
+        visits = cache.get(day_key, 0) or 0
+        signups = User.objects.filter(
+            date_joined__gte=day,
+            date_joined__lt=next_day,
+        ).count()
+        daily_visits.append({'date': day.isoformat(), 'count': visits})
+        daily_signups.append({'date': day.isoformat(), 'count': signups})
+
+    return JsonResponse({
+        'visits': {
+            'total': total_visits,
+            '7d': visits_7d,
+            '30d': visits_30d,
+        },
+        'signups': {
+            'total': total_signups,
+            'active': active_signups,
+            '7d': signups_7d,
+            '30d': signups_30d,
+            'pending_activation': pending_activation,
+        },
+        'conversion_rate': {
+            '7d': conv_rate_7d,
+            '30d': conv_rate_30d,
+            'total': conv_rate_total,
+        },
+        'daily_visits': daily_visits,
+        'daily_signups': daily_signups,
+    })
+
+
+@require_GET
+@_staff_required
+def revenue(request):
+    """GET /api/internal/revenue/ — MRR, churn, ARPU, LTV."""
+    from django.conf import settings
+
+    prices = getattr(settings, 'PLAN_PRICES', {})
+
+    active_subs = Subscription.objects.filter(status=Subscription.STATUS_ACTIVE)
+    plan_dist = active_subs.values('plan').annotate(count=Count('id'))
+    active_by_plan = {p['plan']: p['count'] for p in plan_dist}
+
+    mrr = sum(prices.get(plan, 0) * count for plan, count in active_by_plan.items())
+    active_count = active_subs.count()
+    arpu = round(mrr / active_count, 0) if active_count else 0
+    ltv = arpu * 12
+
+    now = timezone.now()
+    last_30d = now - timedelta(days=30)
+    cancelled_30d = Subscription.objects.filter(
+        status=Subscription.STATUS_CANCELLED,
+        actualizado__gte=last_30d,
+    ).count()
+    total_historical = Subscription.objects.count()
+    churn_rate = round(cancelled_30d / total_historical * 100, 1) if total_historical else 0
+
+    status_dist = Subscription.objects.values('status').annotate(
+        count=Count('id'),
+    ).order_by('-count')
+
+    revenue_by_plan = [
+        {'plan': plan, 'count': count, 'mrr': prices.get(plan, 0) * count}
+        for plan, count in active_by_plan.items()
+    ]
+
+    return JsonResponse({
+        'mrr': mrr,
+        'arpu': arpu,
+        'ltv': ltv,
+        'churn_rate': churn_rate,
+        'cancelled_30d': cancelled_30d,
+        'active_count': active_count,
+        'plan_prices': prices,
+        'status_distribution': list(status_dist),
+        'plan_distribution': list(plan_dist),
+        'revenue_by_plan': revenue_by_plan,
+    })
+
+
 internal_urls = [
     path('overview/', overview, name='internal_overview'),
     path('users/', users, name='internal_users'),
     path('links/', links, name='internal_links'),
     path('clicks/', clicks, name='internal_clicks'),
     path('subscriptions/', subscriptions, name='internal_subscriptions'),
+    path('verifications/', verifications, name='internal_verifications'),
+    path('marketing/', marketing, name='internal_marketing'),
+    path('revenue/', revenue, name='internal_revenue'),
     path('health/', health, name='internal_health'),
 ]
